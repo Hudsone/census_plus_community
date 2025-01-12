@@ -90,6 +90,7 @@
 			</Anchor>
         </Anchors>
 <!--        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true"> -->
+        <!--
         <Backdrop  edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
             <BackgroundInsets>
                 <AbsInset left="11" right="12" top="12" bottom="11" />
@@ -101,6 +102,10 @@
                 <AbsValue val="32" />
             </EdgeSize>
         </Backdrop>
+        -->
+        <KeyValues>
+            <KeyValue key="backdropInfo" value="CP_PlayerListWindow_BackdropInfo" type="global"/>
+        </KeyValues>
         <Layers>
           <Layer level="BACKGROUND">
 				<Texture name="CensusPlayerListBackground" file="Interface\Dialogframe\UI-DialogBox-Background-Dark">

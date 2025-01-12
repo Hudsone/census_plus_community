@@ -4117,6 +4117,7 @@
         <Anchors>
             <Anchor point="CENTER" />
         </Anchors>
+        <!--
         <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
             <BackgroundInsets>
                 <AbsInset left="11" right="12" top="12" bottom="11" />
@@ -4128,6 +4129,10 @@
                 <AbsValue val="32" />
             </EdgeSize>
         </Backdrop>
+        -->
+        <KeyValues>
+            <KeyValue key="backdropInfo" value="CP_EU_US_Version_BackdropInfo" type="global"/>
+        </KeyValues>
         <Layers>
             <Layer level="ARTWORK">
                 <FontString name="CP_Title" inherits="GameFontHighlight" text="CENSUSPLUS_LOCALE_SELECT">

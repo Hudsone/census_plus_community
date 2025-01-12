@@ -75,10 +75,8 @@ local CensusPlus_NUMGUILDBUTTONS = 10;			-- How many guild buttons are on the UI
 local LATEST_XPAC_LIMIT = 120		--BfA limit
 local expansions = 15								-- arbitrary number for max expansion packs for WoW
 													-- pulls from Blizzard global data.. maximum possible character level
-repeat 
-  expansions = expansions -1
-  MAX_CHARACTER_LEVEL = MAX_PLAYER_LEVEL_TABLE[expansions]
-until MAX_CHARACTER_LEVEL ~= nil
+
+MAX_CHARACTER_LEVEL = GetMaxLevelForPlayerExpansion()
 --print("Max Character Level")
 --print(MAX_CHARACTER_LEVEL)
 --local MAX_CHARACTER_LEVEL = 120;					-- Maximum level a PC can attain  testing only comment out for live
@@ -677,10 +675,10 @@ end
 function CensusPlus_ToggleOptions(self)  -- referenced by CensusPlus.xml
 	PlaySound(856,"Master");
 
-	if ( not InterfaceOptionsFrame:IsShown() ) then
-		InterfaceOptionsFrame:Show();
+	if ( not SettingsPanel:IsShown() ) then
+		SettingsPanel:Show();
 	end
-	InterfaceOptionsFrame_OpenToCategory("CensusPlus")
+	Settings.OpenToCategory(CensusPlusOptions.categoryId)
 --		CensusPlusSetCheckButtonState()
 end
 
@@ -4855,10 +4853,14 @@ function CensusPlus_CheckForBattleground()
 		--
 		g_CurrentlyInBG = true;
 	else
-		if( GetBattlefieldStatInfo(1) ~= nil ) then  -- if player in battlefield
-			g_CurrentlyInBG = true;
-		else
-			g_CurrentlyInBG = false;
+		local maxBattleFieldId = GetMaxBattlefieldID()
+		for i = 1, maxBattleFieldId do
+			local status, _ = GetBattlefieldStatus(i)
+			if( status == "active" ) then  -- if player in battlefield
+				g_CurrentlyInBG = true;
+			else
+				g_CurrentlyInBG = false;
+			end
 		end
 	end
 
@@ -5140,12 +5142,14 @@ function CensusPlusBlizzardOptions()
 
 -- Create main frame for information text
 	CensusPlusOptions = CreateFrame("FRAME", "CensusPlusOptions")
-	CensusPlusOptions.name = GetAddOnMetadata("CensusPlus", "Title")
+	CensusPlusOptions.name = C_AddOns.GetAddOnMetadata("CensusPlus", "Title")
 	CensusPlusOptions.default = function (self) CensusPlus_ResetConfig() end
 	CensusPlusOptions.refresh = function (self) CensusPlusSetCheckButtonState() end
 	CensusPlusOptions.cancel = function (self) CensusPlusRestoreSettings() end
 	CensusPlusOptions.okay = function (self) CensusPlusCloseOptions() end
-	InterfaceOptions_AddCategory(CensusPlusOptions)
+	local category, _ = Settings.RegisterCanvasLayoutCategory(CensusPlusOptions, CensusPlusOptions.name)
+	Settings.RegisterAddOnCategory(category)
+	CensusPlusOptions.categoryId = category:GetID()
 
 -- Create Title frame
 	CensusPlusOptionsHeader = CensusPlusOptions:CreateFontString(nil, "ARTWORK")
@@ -5175,7 +5179,7 @@ function CensusPlusBlizzardOptions()
 	CensusPlusOptionsWR:SetText(CENSUSPLUS_CCO_OPTIONOVERRIDES)
 	
 --Create Frame CheckButton (Verbose)
-	CensusPlusCheckButton1 = CreateFrame("CheckButton", "CensusPlusCheckButton1", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton1 = CreateFrame("CheckButton", "CensusPlusCheckButton1", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton1:SetPoint("TOPLEFT", CensusPlusOptionsWL, "BOTTOMLEFT", 2, -10)
 	CensusPlusCheckButton1:SetScript("OnClick", function(self)
 		local g_AW_Verbose = CensusPlusCheckButton1:GetChecked()
@@ -5190,7 +5194,7 @@ function CensusPlusBlizzardOptions()
 		end
 		CensusPlus_Verbose(self)
 	end)
-	CensusPlusCheckButton1Text:SetText(CENSUS_OPTIONS_VERBOSE)
+	CensusPlusCheckButton1:SetText(CENSUS_OPTIONS_VERBOSE)
 	CensusPlusCheckButton1.tooltipText = CENSUS_OPTIONS_VERBOSE_TOOLTIP
 
 --Create Frame tri-selector button (CO - Verbose - enable)
@@ -5314,7 +5318,7 @@ function CensusPlusBlizzardOptions()
 	CensusPlusOptionsRadioButton_C1c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRIDE
 
 --Create Frame enable Stealth Mode
-	CensusPlusCheckButton2 = CreateFrame("CheckButton", "CensusPlusCheckButton2", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton2 = CreateFrame("CheckButton", "CensusPlusCheckButton2", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton2:SetPoint("TOPLEFT", CensusPlusCheckButton1, "BOTTOMLEFT", 0, -4)
 	CensusPlusCheckButton2:SetScript("OnClick", function(self) 
 		local g_AW_Stealth = CensusPlusCheckButton2:GetChecked()
@@ -5328,7 +5332,7 @@ function CensusPlusBlizzardOptions()
 		end
 		CensusPlus_Stealth(self)
 	end)
-	CensusPlusCheckButton2Text:SetText(CENSUS_OPTIONS_STEALTH)
+	CensusPlusCheckButton2:SetText(CENSUS_OPTIONS_STEALTH)
 	CensusPlusCheckButton2.tooltipText = CENSUS_OPTIONS_STEALTH_TOOLTIP
 
 --Create Frame tri-selector button (CO - Stealth - enable)
@@ -5450,7 +5454,7 @@ function CensusPlusBlizzardOptions()
 CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRIDE
 
 --Create Frame enable Census Button 
-	CensusPlusCheckButton3 = CreateFrame("CheckButton", "CensusPlusCheckButton3", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton3 = CreateFrame("CheckButton", "CensusPlusCheckButton3", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton3:SetPoint("TOPLEFT", CensusPlusCheckButton2, "BOTTOMLEFT", 2, -4) --CensusPlusOptionsWMZ
 	CensusPlusCheckButton3:SetScript("OnClick", function(self) 
 		local g_AW_CensusButtonShown = CensusPlusCheckButton3:GetChecked()
@@ -5464,7 +5468,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 		end
 		CensusPlus_CensusButtonShown(self)
 	end)
-	CensusPlusCheckButton3Text:SetText(CENSUS_OPTIONS_BUTSHOW)
+	CensusPlusCheckButton3:SetText(CENSUS_OPTIONS_BUTSHOW)
 	CensusPlusCheckButton3.tooltipText = CENSUS_OPTIONS_BUTSHOW
 
 --Create Frame tri-selector button (CO - CensusPlus Button - enable)
@@ -5581,7 +5585,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 	CensusPlusOptionsRadioButton_C3c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRIDE
 
 --Create Frame CensusButton Animation
-	CensusPlusCheckButton4 = CreateFrame("CheckButton", "CensusPlusCheckButton4", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton4 = CreateFrame("CheckButton", "CensusPlusCheckButton4", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton4:SetPoint("TOPLEFT", CensusPlusCheckButton3, "BOTTOMLEFT", 0, -4)
 	CensusPlusCheckButton4:SetScript("OnClick", function(self) 
 		local g_AWCensusButtonAnimi = CensusPlusCheckButton4:GetChecked()
@@ -5595,7 +5599,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 		end
 		CensusPlus_CensusButtonAnimi(self)
 	end)
-	CensusPlusCheckButton4Text:SetText(CENSUSPLUS_CENSUSBUTTONANIMITEXT)
+	CensusPlusCheckButton4:SetText(CENSUSPLUS_CENSUSBUTTONANIMITEXT)
 	CensusPlusCheckButton4.tooltipText = ENABLE.." "..CENSUSPLUS_CENSUSBUTTONANIMITEXT
 
 --Create Frame tri-selector button (CO - Census button animation - enable)
@@ -5704,7 +5708,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 	CensusPlusOptionsRadioButton_C4c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRIDE
 
 -- Create Frame AutoCensus enable
-	CensusPlusCheckButton5 = CreateFrame("CheckButton", "CensusPlusCheckButton5", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton5 = CreateFrame("CheckButton", "CensusPlusCheckButton5", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton5:SetPoint("TOPLEFT", CensusPlusCheckButton4, "BOTTOMLEFT", 0, -4)
 	CensusPlusCheckButton5:SetScript("OnClick", function(self)
 		local g_AW_AutoCensus = CensusPlusCheckButton5:GetChecked()
@@ -5721,7 +5725,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 		end
 		CensusPlus_SetAutoCensus(self)
 	end)
-	CensusPlusCheckButton5Text:SetText(CENSUS_OPTIONS_AUTOCENSUS)
+	CensusPlusCheckButton5:SetText(CENSUS_OPTIONS_AUTOCENSUS)
 	CensusPlusCheckButton5.tooltipText = CENSUSPLUS_AUTOCENSUSTEXT
 
 --Create Frame tri-selector button (CO - CENSUS_OPTIONS_AUTOCENSUS - enable)
@@ -5961,7 +5965,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 	CensusPlusAutoStartButton.tooltipText = CENSUSPLUS_AUTOSTARTTEXT..CPp.AutoStartTrigger +1
 
 --Create Frame Enable FinishSound
-	CensusPlusCheckButton6 = CreateFrame("CheckButton", "CensusPlusCheckButton6", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton6 = CreateFrame("CheckButton", "CensusPlusCheckButton6", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton6:SetPoint("TOPLEFT", CensusPlusSlider1, "BOTTOMLEFT", -68, -12)
 	CensusPlusCheckButton6:SetScript("OnClick", function(self)
 		local g_AW_FinishSound = CensusPlusCheckButton6:GetChecked()
@@ -5972,7 +5976,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 		end
 		CensusPlus_FinishSound(self)
 	end)
-	CensusPlusCheckButton6Text:SetText(CENSUS_OPTIONS_SOUND_ON_COMPLETE)
+	CensusPlusCheckButton6:SetText(CENSUS_OPTIONS_SOUND_ON_COMPLETE)
 	CensusPlusCheckButton6.tooltipText = CENSUS_OPTIONS_SOUND_TOOLTIP
 
 --Create Frame tri-selector button (CO - CENSUS_OPTIONS_FinishSound- enable)
@@ -6166,7 +6170,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 	CensusPlusOptionsWMZ:SetText(CENSUSPLUS_ACCOUNT_WIDE_ONLY_OPTIONS)
 
 --Create Frame Logarithmic  bars
-	CensusPlusCheckButton7= CreateFrame("CheckButton", "CensusPlusCheckButton7", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton7= CreateFrame("CheckButton", "CensusPlusCheckButton7", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton7:SetPoint("TOPLEFT", CensusPlusOptionsWMZ, "BOTTOMLEFT", 0, -6)
 	CensusPlusCheckButton7:SetChecked(true)
 	CensusPlusCheckButton7:SetScript("OnClick", function(self)
@@ -6178,7 +6182,7 @@ CensusPlusOptionsRadioButton_C2c.tooltipText = CENSUS_OPTIONS_CCO_REMOVE_OVERRID
 		end
 --		CensusPlus_FinishSound(self)
 	end)
-	CensusPlusCheckButton7Text:SetText(CENSUS_OPTIONS_LOG_BARS) --
+	CensusPlusCheckButton7:SetText(CENSUS_OPTIONS_LOG_BARS) --
 	CensusPlusCheckButton7.tooltipText = CENSUS_OPTIONS_LOG_BARSTEXT
 
 --Create CensusPlus.Background:alpha Slider
@@ -6227,7 +6231,7 @@ local g_CPWin_background_alpha = 0.5
 			"CheckButton",
 			"CensusPlusCheckButton8",
 			CensusPlusOptions,
-			"OptionsCheckButtonTemplate"
+			"SettingsCheckBoxControlTemplate"
 		)
 	CensusPlusCheckButton8:SetPoint(
 		"TOPLEFT",
@@ -6245,7 +6249,7 @@ local g_CPWin_background_alpha = 0.5
 			CensusPlus_Database["Info"]["UseWorldFrameClicks"] = true
 		end
 	end)
-	CensusPlusCheckButton8Text:SetText("Send who request on mouse clicks in world") --
+	CensusPlusCheckButton8:SetText("Send who request on mouse clicks in world") --
 	CensusPlusCheckButton8.tooltipText = "Sends a who request each time the user clicks into the 3D world. At minimum every 5 seconds."
 
 	CensusPlusCheckButton9 =
@@ -6253,7 +6257,7 @@ local g_CPWin_background_alpha = 0.5
 			"CheckButton",
 			"CensusPlusCheckButton9",
 			CensusPlusOptions,
-			"OptionsCheckButtonTemplate"
+			"SettingsCheckBoxControlTemplate"
 		)
 	CensusPlusCheckButton9:SetPoint(
 		"TOPLEFT",
@@ -6271,25 +6275,25 @@ local g_CPWin_background_alpha = 0.5
 			CensusPlus_Database["Info"]["UseInterfaceClicks"] = true
 		end
 	end)
-	CensusPlusCheckButton9Text:SetText("Send who request on mouse clicks in interface") --
+	CensusPlusCheckButton9:SetText("Send who request on mouse clicks in interface") --
 	CensusPlusCheckButton9.tooltipText = "Sends a who request each time the user clicks on interface buttons. At minimum every 5 seconds."
 
 
 --[[
-	CensusPlusCheckButton8 = CreateFrame("CheckButton", "CensusPlusCheckButton8", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton8 = CreateFrame("CheckButton", "CensusPlusCheckButton8", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 CensusPlusCheckButton8:SetPoint("TOPLEFT", CensusPlusSlider2, "BOTTOMLEFT", 0, -4)
 CensusPlusCheckButton8:SetScript("OnMouseDown", function(self) 
-CensusPlusCheckButton8Text:SetText("He is hiding in another game")
+CensusPlusCheckButton8:SetText("He is hiding in another game")
  end)
  CensusPlusCheckButton8:SetScript("OnMouseUp", function(self) 
-CensusPlusCheckButton8Text:SetText("Where is Waldo?")
+CensusPlusCheckButton8:SetText("Where is Waldo?")
  end)
-CensusPlusCheckButton8Text:SetText("Where is Waldo?")
+CensusPlusCheckButton8:SetText("Where is Waldo?")
 
-CensusPlusCheckButton9 = CreateFrame("CheckButton", "CensusPlusCheckButton9", CensusPlusOptions, "OptionsCheckButtonTemplate")
+CensusPlusCheckButton9 = CreateFrame("CheckButton", "CensusPlusCheckButton9", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 CensusPlusCheckButton9:SetPoint("TOPLEFT", CensusPlusCheckButton8, "BOTTOMLEFT", 0, -4)
 CensusPlusCheckButton9:SetScript("OnClick", function(self) CensusPlus_SlashCommand("p4") end)
-CensusPlusCheckButton9Text:SetText("Don't look now, but you have a stealth Elephant about to back stab you.")
+CensusPlusCheckButton9:SetText("Don't look now, but you have a stealth Elephant about to back stab you.")
 
 CensusPlusOptionsMisc = CensusPlusOptions:CreateFontString(nil, "ARTWORK")
 CensusPlusOptionsMisc:SetFontObject(GameFontWhite)
@@ -6300,7 +6304,7 @@ CensusPlusOptionsMisc:SetPoint("TOPLEFT", CensusPlusCheckButton9, "BOTTOMLEFT", 
 CensusPlusOptionsMisc:SetText("Misc text string")
 --]]
 -- The final button - chatty button disable
-	CensusPlusCheckButton10 = CreateFrame("CheckButton", "CensusPlusCheckButton10", CensusPlusOptions, "OptionsCheckButtonTemplate")
+	CensusPlusCheckButton10 = CreateFrame("CheckButton", "CensusPlusCheckButton10", CensusPlusOptions, "SettingsCheckBoxControlTemplate")
 	CensusPlusCheckButton10:SetPoint("TOPLEFT", CensusPlusSlider2, "BOTTOMLEFT", -48, -124)
 	CensusPlusCheckButton10:SetChecked(true)
 	CensusPlusCheckButton10:SetScript("OnClick", function(self) 
@@ -6311,7 +6315,7 @@ CensusPlusOptionsMisc:SetText("Misc text string")
 				CensusPlus_Database["Info"]["ChattyOptions"] = false
 		end
 	end)
-CensusPlusCheckButton10Text:SetText(CENSUSPLUS_OPTIONS_CHATTYCONFIRM)
+CensusPlusCheckButton10:SetText(CENSUSPLUS_OPTIONS_CHATTYCONFIRM)
 CensusPlusCheckButton10.tooltipText = CENSUSPLUS_OPTIONS_CHATTY_TOOLTIP
 end
 
@@ -6516,3 +6520,22 @@ function CensusPlusCloseOptions() -- reset Interface Options frame to Blizzard d
 	InterfaceOptionsFrame_OpenToCategory(CONTROLS_LABEL)
 
 end
+
+-- UI element configurations
+CP_EU_US_Version_BackdropInfo = {
+	bgFile = "Interface\DialogFrame\UI-DialogBox-Background",
+	edgeFile = "Interface\DialogFrame\UI-DialogBox-Border",
+	tile = true,
+	tileEdge = true,
+	tileSize = 32,
+	edgeSize = 32,
+	insets = { left = 11, right = 12, top = 12, bottom = 11 },
+};
+
+CP_PlayerListWindow_BackdropInfo = {
+	edgeFile = "Interface\DialogFrame\UI-DialogBox-Border",
+	tileEdge = true,
+	tileSize = 32,
+	edgeSize = 32,
+	insets = { left = 11, right = 12, top = 12, bottom = 11 },
+}
