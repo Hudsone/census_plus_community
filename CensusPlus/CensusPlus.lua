@@ -101,7 +101,9 @@ local CensusPLus_DEBUGWRITES = false    -- don't add debug into to censusplus.lu
 local CP_g_queue_count = 0 -- process speed checking avg time to process 1 queue
 local wholib
 
-
+if IntellisenseTrick_ExposeGlobal then
+	wholib = LibWho
+end
 
 
 

@@ -18,6 +18,10 @@ local minor_version = tonumber(("2.0.179"):match("%d+%.%d+%.(%d+)")) or 99999
 
 local lib = LibStub:NewLibrary(major_version, minor_version)
 
+if IntellisenseTrick_ExposeGlobal then
+  LibWho = lib
+end
+
 if not lib then
   return -- already loaded and no upgrade necessary
 end
