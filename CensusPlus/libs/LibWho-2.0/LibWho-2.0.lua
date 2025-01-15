@@ -36,71 +36,82 @@ local function dbgfunc(...) if lib.Debug then print(...) end end
 local function NOP() return end
 local dbg = NOP
 
----
---- initalize base
----
+-- Initializes the library.
+--
+-- The reason why to create a function to do so is to make it easier to fold.
+local function Initialize()
 
-if type(lib['hooked']) ~= 'table' then lib['hooked'] = {} end -- if
+  ---
+  --- initalize base
+  ---
 
-if type(lib['hook']) ~= 'table' then lib['hook'] = {} end -- if
+  if type(lib['hooked']) ~= 'table' then lib['hooked'] = {} end -- if
 
-if type(lib['events']) ~= 'table' then lib['events'] = {} end -- if
+  if type(lib['hook']) ~= 'table' then lib['hook'] = {} end -- if
 
-if type(lib['embeds']) ~= 'table' then lib['embeds'] = {} end -- if
+  if type(lib['events']) ~= 'table' then lib['events'] = {} end -- if
 
-if type(lib['frame']) ~= 'table' then
-  lib['frame'] = CreateFrame('Frame', major_version);
-end -- if
-lib['frame']:Hide()
+  if type(lib['embeds']) ~= 'table' then lib['embeds'] = {} end -- if
 
-lib.Queue = {[1] = {}, [2] = {}, [3] = {}}
-lib.WhoInProgress = false
-lib.Result = nil
-lib.Args = nil
-lib.Total = nil
-lib.Quiet = nil
-lib.Debug = false
-lib.Cache = {}
-lib.CacheQueue = {}
-lib.SetWhoToUIState = false
+  if type(lib['frame']) ~= 'table' then
+    lib['frame'] = CreateFrame('Frame', major_version);
+  end -- if
+  lib['frame']:Hide()
 
-lib.MinInterval = 2.5
-lib.MaxInterval = 10
+  lib.Queue = {[1] = {}, [2] = {}, [3] = {}}
+  lib.WhoInProgress = false
+  lib.Result = nil
+  lib.Args = nil
+  lib.Total = nil
+  lib.Quiet = nil
+  lib.Debug = false
+  lib.Cache = {}
+  lib.CacheQueue = {}
+  lib.SetWhoToUIState = false
 
----
---- locale
----
+  lib.MinInterval = 2.5
+  lib.MaxInterval = 10
 
-if (GetLocale() == "ruRU") then
-  lib.L = {
-    ['console_queued'] = 'Добавлено в очередь "/who %s"',
-    ['console_query'] = 'Результат "/who %s"',
-    ['gui_wait'] = '- Пожалуйста подождите -'
+  ---
+  --- locale
+  ---
+
+  if (GetLocale() == "ruRU") then
+    lib.L = {
+      ['console_queued'] = 'Добавлено в очередь "/who %s"',
+      ['console_query'] = 'Результат "/who %s"',
+      ['gui_wait'] = '- Пожалуйста подождите -'
+    }
+  else
+    -- enUS is the default
+    lib.L = {
+      ['console_queued'] = 'Added "/who %s" to queue',
+      ['console_query'] = 'Result of "/who %s"',
+      ['gui_wait'] = '- Please Wait -'
+    }
+  end -- if
+
+  ---
+  --- external functions/constants
+  ---
+
+  lib['external'] = {
+    'WHOLIB_QUEUE_USER', 'WHOLIB_QUEUE_QUIET', 'WHOLIB_QUEUE_SCANNING',
+    'WHOLIB_FLAG_ALWAYS_CALLBACK', 'Who', 'UserInfo', 'CachedUserInfo',
+    'GetWhoLibDebug', 'SetWhoLibDebug'
+    --	'RegisterWhoLibEvent',
   }
-else
-  -- enUS is the default
-  lib.L = {
-    ['console_queued'] = 'Added "/who %s" to queue',
-    ['console_query'] = 'Result of "/who %s"',
-    ['gui_wait'] = '- Please Wait -'
-  }
-end -- if
 
----
---- external functions/constants
----
+  -- queues
+  lib['WHOLIB_QUEUE_USER'] = 1
+  lib['WHOLIB_QUEUE_QUIET'] = 2
+  lib['WHOLIB_QUEUE_SCANNING'] = 3
 
-lib['external'] = {
-  'WHOLIB_QUEUE_USER', 'WHOLIB_QUEUE_QUIET', 'WHOLIB_QUEUE_SCANNING',
-  'WHOLIB_FLAG_ALWAYS_CALLBACK', 'Who', 'UserInfo', 'CachedUserInfo',
-  'GetWhoLibDebug', 'SetWhoLibDebug'
-  --	'RegisterWhoLibEvent',
-}
+  -- bit masks!
+  lib['WHOLIB_FLAG_ALWAYS_CALLBACK'] = 1
+end
 
--- queues
-lib['WHOLIB_QUEUE_USER'] = 1
-lib['WHOLIB_QUEUE_QUIET'] = 2
-lib['WHOLIB_QUEUE_SCANNING'] = 3
+Initialize()
 
 local queue_all = {
   [1] = 'WHOLIB_QUEUE_USER',
@@ -109,9 +120,6 @@ local queue_all = {
 }
 
 local queue_quiet = {[2] = 'WHOLIB_QUEUE_QUIET', [3] = 'WHOLIB_QUEUE_SCANNING'}
-
--- bit masks!
-lib['WHOLIB_FLAG_ALWAYS_CALLBACK'] = 1
 
 function lib:Reset()
   self.Queue = {[1] = {}, [2] = {}, [3] = {}}
@@ -640,8 +648,6 @@ function lib:RaiseCallback(args, ...)
     args.handler[args.callback](args.handler, self:DupAll(...))
   end -- if
 end
-
--- Argument checking
 
 function lib:CheckArgument(func, name, argtype, arg, defarg)
   if arg == nil and defarg ~= nil then
