@@ -18,9 +18,7 @@ local minor_version = tonumber(("2.0.179"):match("%d+%.%d+%.(%d+)")) or 99999
 
 local lib = LibStub:NewLibrary(major_version, minor_version)
 
-if IntellisenseTrick_ExposeGlobal then
-  LibWho = lib
-end
+if IntellisenseTrick_ExposeGlobal then LibWho = lib end
 
 if not lib then
   return -- already loaded and no upgrade necessary
@@ -40,9 +38,9 @@ local function dbgfunc(...) if lib.Debug then print(...) end end
 local function NOP() return end
 local dbg = NOP
 
--- Initializes the library.
---
--- The reason why to create a function to do so is to make it easier to fold.
+---Initializes the library.
+---
+---The reason why to create a function to do so is to make it easier to fold.
 local function Initialize()
 
   ---
@@ -131,6 +129,13 @@ function lib:Reset()
   self.CacheQueue = {}
 end
 
+---Makes a who request.
+---
+---The function is the main entry point for the library.
+---@async
+---@param defhandler table Usually LibWho itself since it was called with the form `LibWho:Who(...)`.
+---@param query string The query to send to the server.
+---@param opts {queue: integer, flags: number, callback: function | string | nil, handler: table | nil} A table of options.
 function lib.Who(defhandler, query, opts)
   local self, args, usage = lib, {}, 'Who(query, [opts])'
 
@@ -653,6 +658,17 @@ function lib:RaiseCallback(args, ...)
   end -- if
 end
 
+---Validates the arguments by type.
+---
+---Performs a generic type checking for the arguments.
+---
+---Example usage: `self:CheckArgument('Who(query, options)', 'query', 'string', query, 'all')`
+---@param func string The prototype of the function.
+---@param name string The argument name in the prototype.
+---@param argtype string The expected type of the argument.
+---@param arg any The argument to check.
+---@param defarg any The default value of the argument if it is nil. Note this will not be type checked.
+---@return any `arg` if it is valid. `defarg` if `arg` is nil. Otherwise, it throws an error.
 function lib:CheckArgument(func, name, argtype, arg, defarg)
   if arg == nil and defarg ~= nil then
     return defarg
@@ -665,6 +681,17 @@ function lib:CheckArgument(func, name, argtype, arg, defarg)
   end -- if
 end
 
+---Validates the arguments by value.
+---
+---Performs a generic value checking for the arguments.
+---
+---Example usage: `self:CheckPreset('Who(query, options)', 'options', {'OPT_1', 'OPT_2'}, options, 2)`
+---@param func string The prototype of the function.
+---@param name string The argument name in the prototype.
+---@param preset table The valid values of the argument. `arg` will be checked as the `key` of this table.
+---@param arg any The argument to check.
+---@param defarg any The default value of the argument if it is nil. Not this will not be validated.
+---@return any `arg` if it is valid. `defarg` if `arg` is nil. Otherwise, it throws an error.
 function lib:CheckPreset(func, name, preset, arg, defarg)
   if arg == nil and defarg ~= nil then
     return defarg
@@ -685,6 +712,18 @@ function lib:CheckPreset(func, name, preset, arg, defarg)
   end -- if
 end
 
+---Validates the callback.
+---
+---Performs a generic value checking for the callbacks.
+---
+---Example usage: `self:CheckPreset('Who(query, options)', 'options.', options.callback, options.handler, defhandler, true)`
+---@param func string The prototype of the function.
+---@param prefix string The prefix of the callback pair in the prototype.
+---@param callback function | string | nil The callback to check. If it is a string, it will be treated as a method of the `handler`.
+---@param handler table | nil The handler of the callback if `callback` is a string.
+---@param defhandler table | nil The default handler of the callback if `handler` is nil.
+---@param nonil boolean | nil If true, `callback` cannot be nil.
+---@return function | string | nil callback, table | nil handler If they are valid. Otherwise, it throws an error.
 function lib:CheckCallback(func, prefix, callback, handler, defhandler, nonil)
   if not nonil and callback == nil then
     -- no callback: ignore handler
