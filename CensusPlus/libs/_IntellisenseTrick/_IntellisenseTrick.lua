@@ -19,3 +19,14 @@
 ---Keep it disabled. Write global patching code within blocks guard by this
 ---variable. Then it won't be executed in game.
 IntellisenseTrick_ExposeGlobal = false
+if IntellisenseTrick_ExposeGlobal then
+  tinsert = table.insert
+  ---Alias of `table.remove()`.
+  ---@generic T
+  ---@param list T[]
+  ---@param pos? integer
+  ---@return T
+  tremove = function(list, pos)
+    table.remove
+  end
+end

@@ -38,6 +38,20 @@ local function dbgfunc(...) if lib.Debug then print(...) end end
 local function NOP() return end
 local dbg = NOP
 
+-- Class Definitions ----------------------------------------------------------
+
+---@class Task
+---@field query string The query to send to the server.
+---@field queue integer The queue to send the query to. Should only be WHOLIB_QUEUE_USER, WHOLIB_QUEUE_QUIET, or WHOLIB_QUEUE_SCANNING.
+---@field flags integer
+---@field callback function | string | nil The callback to call when the query is done. If it is a string, it will be treated as a method of the `handler`.
+---@field handler table | nil The handler of the callback if `callback` is a string.
+---@field gui boolean | nil
+---@field console_show boolean | nil It is only specified interanlly in `ConsoleWho()` and used to mark if this Task has been shown in a "queued" message.
+---@field whotoui boolean | nil
+
+-------------------------------------------------------------------------------
+
 ---Initializes the library.
 ---
 ---The reason why to create a function to do so is to make it easier to fold.
@@ -60,9 +74,14 @@ local function Initialize()
   end -- if
   lib['frame']:Hide()
 
+  ---@type Task[][]
   lib.Queue = {[1] = {}, [2] = {}, [3] = {}}
+  ---This flag is set to `true` only when `AskWhoNext()` is called. Reset to
+  ---`false` while invoking `GetNextFromScheduler()` or when `ReturnWho()` is
+  ---called.
   lib.WhoInProgress = false
   lib.Result = nil
+  ---@type Task | nil
   lib.Args = nil
   lib.Total = nil
   lib.Quiet = nil
@@ -419,6 +438,7 @@ function lib:AskWhoNext()
   self:CancelPendingWhoNext()
 
   if self.WhoInProgress then
+    assert(self.Args, "self.Args should never be nil if WhoInProgress is true.")
     -- if we had a who going, it didnt complete
     dbg("TIMEOUT: " .. self.Args.query)
     local args = self.Args
@@ -446,14 +466,16 @@ function lib:AskWhoNext()
   local kludge = 10
   repeat
     k, v = self:GetNextFromScheduler()
-    if not k then break end
+    if not k then break end  -- It doesn't look like this will ever happen.
+    -- If WhoFrame is shown and we only have WHOLIB_QUEUE_SCANNING to process,
+    -- we give up for now in order not to break the UI opened by the player.
     if (WhoFrame:IsShown() and k > self.WHOLIB_QUEUE_QUIET) then break end
     if (#v > 0) then
       args = tremove(v, 1)
       break
     end
     kludge = kludge - 1
-  until kludge <= 0
+  until kludge <= 0  -- I don't know why to iterate 10 times here.
 
   if args then
     self.WhoInProgress = true
@@ -494,6 +516,8 @@ function lib:AskWhoNext()
   end
 end
 
+---Inserts a who request to the queue. `self.readyForNext` is set to true.
+---@param args Task The task to insert.
 function lib:AskWho(args)
   tinsert(self.Queue[args.queue], args)
   dbg('[' .. args.queue .. '] added "' .. args.query .. '", queues=' ..
@@ -598,13 +622,24 @@ function lib:ReturnWho()
   if not self:AllQueuesEmpty() then self:AskWhoNextIn5sec() end
 end
 
+---Makes a who request and gets GUI event later.
+---
+---This function is expected to be called from the source WHOLIB_QUEUE_USER.
+---@param msg string Looks like the query itself. However, it's strange that it is also used to compare with localized strings. When invoked from lib:Who(), it is the query string.
 function lib:GuiWho(msg)
   if (msg == self.L['gui_wait']) then return end
 
+  -- If there is any user query that is with `gui` set to true, we will give up
+  -- this time. But why?
   for _, v in pairs(self.Queue[self.WHOLIB_QUEUE_USER]) do
     if (v.gui == true) then return end
   end
+  -- I guess that if WhoInProgress was true, we show the message on the edit box
+  -- of WhoFrame.
   if (self.WhoInProgress) then WhoFrameEditBox:SetText(self.L['gui_wait']) end
+  -- I would say that this saved text should be used in somewhere after
+  -- WhoInProgress is done. However, it is not used anywhere and is saved in all
+  -- cases.
   self.savedText = msg
   self:AskWho({
     query = msg,
@@ -615,6 +650,8 @@ function lib:GuiWho(msg)
   WhoFrameEditBox:ClearFocus();
 end
 
+---Makes a who request and gets console event later.
+---@param msg string The query to send to the server.
 function lib:ConsoleWho(msg)
   -- WhoFrameEditBox:SetText(msg)
   local console_show = false
