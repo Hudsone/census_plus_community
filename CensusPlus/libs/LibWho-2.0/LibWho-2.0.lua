@@ -850,74 +850,83 @@ function lib:TriggerEvent(event, ...) callbacks:Fire(event, ...) end
 ---
 --- slash commands
 ---
-
-SlashCmdList['WHO'] = function(msg)
-  dbg("console /who: " .. msg)
-  -- new /who function
-  -- local self = lib
-
-  if (msg == '') then
-    lib:GuiWho(WhoFrame_GetDefaultWhoCommand())
-  elseif (WhoFrame:IsVisible()) then
-    lib:GuiWho(msg)
-  else
-    lib:ConsoleWho(msg)
-  end
-end
-
-SlashCmdList['WHOLIB_DEBUG'] = function()
-  -- /wholibdebug: toggle debug on/off
-  local self = lib
-
-  self:SetWhoLibDebug(not self.Debug)
-end
+-- TODO(GH-6): We will go back to enable these part once it's required.
+--
+--SlashCmdList['WHO'] = function(msg)
+--  dbg("console /who: " .. msg)
+--  -- new /who function
+--  -- local self = lib
+--
+--  if (msg == '') then
+--    lib:GuiWho(WhoFrame_GetDefaultWhoCommand())
+--  elseif (WhoFrame:IsVisible()) then
+--    lib:GuiWho(msg)
+--  else
+--    lib:ConsoleWho(msg)
+--  end
+--end
+--
+--SlashCmdList['WHOLIB_DEBUG'] = function()
+--  -- /wholibdebug: toggle debug on/off
+--  local self = lib
+--
+--  self:SetWhoLibDebug(not self.Debug)
+--end
 
 SLASH_WHOLIB_DEBUG1 = '/wholibdebug'
 
----
---- hook activation
----
-
--- functions to hook
-local hooks = {
-  'WhoFrameEditBox_OnEnterPressed'
-  --	'FriendsFrame_OnEvent',
-}
-
--- hook all functions (which are not yet hooked)
-for _, name in pairs(hooks) do
-  if not lib['hooked'][name] then
-    lib['hooked'][name] = _G[name]
-    _G[name] = function(...) lib.hook[name](lib, ...) end -- function
-  end -- if
-end -- for
-
--- C_FriendList functions to hook
-local CFL_hooks = {'SendWho', 'SetWhoToUi'}
-
--- hook all C_FriendList functions (which are not yet hooked)
-for _, name in pairs(CFL_hooks) do
-  if not lib['hooked'][name] then
-    lib['hooked'][name] = _G["C_FriendList"][name]
-    _G["C_FriendList"][name] = function(...) lib.hook[name](lib, ...) end -- function
-  end -- if
-end -- for
-
--- fake 'WhoFrame:Hide' as hooked
-table.insert(hooks, 'WhoFrame_Hide')
-
--- check for unused hooks -> remove function
-for name, _ in pairs(lib['hook']) do
-  if not hooks[name] then lib['hook'][name] = function() end end -- if
-end -- for
-
--- secure hook 'WhoFrame:Hide'
-if not lib['hooked']['WhoFrame_Hide'] then
-  lib['hooked']['WhoFrame_Hide'] = true
-  hooksecurefunc(WhoFrame, 'Hide',
-                 function(...) lib['hook']['WhoFrame_Hide'](lib, ...) end -- function
-  )
-end -- if
+-- Why to make these hooks?
+-- I would think that we want to replace the original functions. The intention
+-- is to do additional things when any other addon calls these functions. I
+-- would guess that we might want to avoid the original functions to be called,
+-- which can interfere the temple of us to retrieve the who data.
+-- What I'm think about is ... maybe we can skip this part?
+--
+-- TODO(GH-5): Consider to realize these parts once our addon really casues a problem.
+-----
+----- hook activation
+-----
+--
+---- functions to hook
+--local hooks = {
+--  'WhoFrameEditBox_OnEnterPressed'
+--  --	'FriendsFrame_OnEvent',
+--}
+--
+---- hook all functions (which are not yet hooked)
+--for _, name in pairs(hooks) do
+--  if not lib['hooked'][name] then
+--    lib['hooked'][name] = _G[name]
+--    _G[name] = function(...) lib.hook[name](lib, ...) end -- function
+--  end -- if
+--end -- for
+--
+---- C_FriendList functions to hook
+--local CFL_hooks = {'SendWho', 'SetWhoToUi'}
+--
+---- hook all C_FriendList functions (which are not yet hooked)
+--for _, name in pairs(CFL_hooks) do
+--  if not lib['hooked'][name] then
+--    lib['hooked'][name] = _G["C_FriendList"][name]
+--    _G["C_FriendList"][name] = function(...) lib.hook[name](lib, ...) end -- function
+--  end -- if
+--end -- for
+--
+---- fake 'WhoFrame:Hide' as hooked
+--table.insert(hooks, 'WhoFrame_Hide')
+--
+---- check for unused hooks -> remove function
+--for name, _ in pairs(lib['hook']) do
+--  if not hooks[name] then lib['hook'][name] = function() end end -- if
+--end -- for
+--
+---- secure hook 'WhoFrame:Hide'
+--if not lib['hooked']['WhoFrame_Hide'] then
+--  lib['hooked']['WhoFrame_Hide'] = true
+--  hooksecurefunc(WhoFrame, 'Hide',
+--                 function(...) lib['hook']['WhoFrame_Hide'](lib, ...) end -- function
+--  )
+--end -- if
 
 ----- Coroutine based implementation (future)
 -- function lib:sendWhoResult(val)
