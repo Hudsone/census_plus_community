@@ -349,6 +349,7 @@ local queryInterval = 5
 
 function lib:GetQueryInterval() return queryInterval end
 
+---Triggers a countdown process for 5 secs to turn on `lib.readyForNext`.
 function lib:AskWhoNextIn5sec()
   if self.frame:IsShown() then return end
 
@@ -357,11 +358,18 @@ function lib:AskWhoNextIn5sec()
   self['frame']:Show()
 end
 
+---Cancels the countdown process of `lib.readyForNext` (hides the frame).
 function lib:CancelPendingWhoNext()
   lib['frame']:Hide()
   lib.readyForNext = false
 end
 
+-- This looks like attampting to control the bit of lib.readyForNext.
+-- The logic is as the following:
+-- 1. When the frame is shown, the timeout is decreased by the elapsed time.
+-- 2. If the timeout is less than or equal to 0, the frame is hidden and
+--    lib.readyForNext is set to true.
+-- 3. This means that we are ready for the next query.
 lib['frame']:SetScript("OnUpdate", function(frame, elapsed)
   lib.Timeout_time = lib.Timeout_time - elapsed
   if lib.Timeout_time <= 0 then
