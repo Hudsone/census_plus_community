@@ -81,6 +81,10 @@ local function Initialize()
   ---called.
   lib.WhoInProgress = false
   lib.Result = nil
+  ---Only get set and reset in `AskWhoNext()`. Since it's not reset within
+  ---`ReturnWho()`, it might just denote the last query, whether it's on
+  ---process or not, and get reset only when no any available query is going to
+  ---be processed.
   ---@type Task | nil
   lib.Args = nil
   lib.Total = nil
@@ -361,6 +365,8 @@ end
 ---Cancels the countdown process of `lib.readyForNext` (hides the frame).
 function lib:CancelPendingWhoNext()
   lib['frame']:Hide()
+  ---If this bit is set to `true`, it means the server timeout should be passed
+  ---and the next query can be proceeded.
   lib.readyForNext = false
 end
 
@@ -437,13 +443,16 @@ end
 
 lib.queue_bounds = queue_bounds
 
+---Asks the next who query.
+---
+---lib.WhoInProgress will be turned on if a query is found.
 function lib:AskWhoNext()
   if lib.frame:IsShown() or not self.readyForNext then
     dbg("Already waiting or not processing")
     return
   end
   self.readyForNext = false
-  self:CancelPendingWhoNext()
+  self:CancelPendingWhoNext()  -- This looks unnecessary.
 
   if self.WhoInProgress then
     assert(self.Args, "self.Args should never be nil if WhoInProgress is true.")
@@ -462,6 +471,8 @@ function lib:AskWhoNext()
     end
     --		end
 
+    -- Since we are in progress and got AskWhoNext invoked again, which might
+    -- indicate that queryInterval was set to a value too low. Increase it.
     if queryInterval < lib.MaxInterval then
       queryInterval = queryInterval + 0.5
       dbg("--Throttling down to 1 who per " .. queryInterval .. "s")
@@ -531,6 +542,9 @@ function lib:AskWho(args)
   dbg('[' .. args.queue .. '] added "' .. args.query .. '", queues=' ..
           #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3])
   self:TriggerEvent('WHOLIB_QUERY_ADDED')
+
+  -- This is quite strainge because it should be timeout-bound. Setting true
+  -- directly here can be misleading.
 
   self.readyForNext = true
 end
