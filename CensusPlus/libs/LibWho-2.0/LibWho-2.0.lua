@@ -92,6 +92,7 @@ local function Initialize()
   lib.Debug = false
   lib.Cache = {}
   lib.CacheQueue = {}
+  ---Reacts to SetWhoToUi() in the hooked API.
   lib.SetWhoToUIState = false
 
   lib.MinInterval = 2.5
@@ -452,7 +453,7 @@ function lib:AskWhoNext()
     return
   end
   self.readyForNext = false
-  self:CancelPendingWhoNext()  -- This looks unnecessary.
+  self:CancelPendingWhoNext() -- This looks unnecessary.
 
   if self.WhoInProgress then
     assert(self.Args, "self.Args should never be nil if WhoInProgress is true.")
@@ -481,11 +482,13 @@ function lib:AskWhoNext()
 
   self.WhoInProgress = false
 
-  local v, k, args = nil
+  ---@type Task | nil
+  local args = nil
+  local v, k
   local kludge = 10
   repeat
     k, v = self:GetNextFromScheduler()
-    if not k then break end  -- It doesn't look like this will ever happen.
+    if not k then break end -- It doesn't look like this will ever happen.
     -- If WhoFrame is shown and we only have WHOLIB_QUEUE_SCANNING to process,
     -- we give up for now in order not to break the UI opened by the player.
     if (WhoFrame:IsShown() and k > self.WHOLIB_QUEUE_QUIET) then break end
@@ -494,7 +497,7 @@ function lib:AskWhoNext()
       break
     end
     kludge = kludge - 1
-  until kludge <= 0  -- I don't know why to iterate 10 times here.
+  until kludge <= 0 -- I don't know why to iterate 10 times here.
 
   if args then
     self.WhoInProgress = true
@@ -866,7 +869,7 @@ function lib:TriggerEvent(event, ...) callbacks:Fire(event, ...) end
 ---
 -- TODO(GH-6): We will go back to enable these part once it's required.
 --
---SlashCmdList['WHO'] = function(msg)
+-- SlashCmdList['WHO'] = function(msg)
 --  dbg("console /who: " .. msg)
 --  -- new /who function
 --  -- local self = lib
@@ -878,14 +881,14 @@ function lib:TriggerEvent(event, ...) callbacks:Fire(event, ...) end
 --  else
 --    lib:ConsoleWho(msg)
 --  end
---end
+-- end
 --
---SlashCmdList['WHOLIB_DEBUG'] = function()
+-- SlashCmdList['WHOLIB_DEBUG'] = function()
 --  -- /wholibdebug: toggle debug on/off
 --  local self = lib
 --
 --  self:SetWhoLibDebug(not self.Debug)
---end
+-- end
 
 SLASH_WHOLIB_DEBUG1 = '/wholibdebug'
 
