@@ -165,7 +165,7 @@ end
 ---The function is the main entry point for the library.
 ---@async
 ---@param query string The query to send to the server.
----@param callback function The callback that receives WhoInfo[].
+---@param callback function The callback that receives (query string, results WhoInfo[]).
 function lib:Who(query, callback)
   local usage = 'Who(query, callback)'
   ---@type Task
@@ -634,12 +634,12 @@ for name, _ in pairs(lib['hook']) do
 end -- for
 
 -- secure hook 'WhoFrame:Hide'
---if not lib['hooked']['WhoFrame_Hide'] then
+-- if not lib['hooked']['WhoFrame_Hide'] then
 --  lib['hooked']['WhoFrame_Hide'] = true
 --  hooksecurefunc(WhoFrame, 'Hide',
 --                 function(...) lib['hook']['WhoFrame_Hide'](lib, ...) end -- function
 --  )
---end -- if
+-- end -- if
 
 ---
 --- hook replacements
@@ -666,9 +666,9 @@ function lib.hook.SetWhoToUi(self, state)
   lib:updateSetWhoToUi()
 end
 
---function lib.hook.WhoFrame_Hide(self)
+-- function lib.hook.WhoFrame_Hide(self)
 --  if (not lib.WhoInProgress) then lib:AskWhoNextIn5sec() end
---end
+-- end
 
 ---
 --- WoW events
@@ -713,8 +713,21 @@ function lib:ProcessWhoResults(args)
   -- I actually don't know which one is the correct number of results.
   whoCount = math.max(numWhos, totalNumWhos)
   self.Result = {}
-  for i = 1, whoCount do self.Result[i] = C_FriendList.GetWhoInfo(i) end
-  args.callback(self.Result)
+  for i = 1, whoCount do
+    info = C_FriendList.GetWhoInfo(i)
+    -- backwards compatibility START
+    info.Name = info.fullName
+    info.Guild = info.fullGuildName
+    info.Level = info.level
+    info.Race = info.raceStr
+    info.Class = info.classStr
+    info.Zone = info.area
+    info.NoLocaleClass = info.filename
+    info.Sex = info.gender
+    -- backwards compatibility END
+    self.Result[i] = info
+  end
+  args.callback(args.query, self.Result)
 end
 
 ---Starts the cooldown process.
@@ -883,8 +896,9 @@ end
 
 local function functionalTest_Who_ShouldReturnResults(test_idx)
   print('Note: Please click to enable the hardware event.')
-  lib:Who('', function(result)
+  lib:Who('0-500', function(query, result)
     assert(#result >= 1)
+    assert(query == '0-500')
     tester:ReportTestResult(test_idx, true)
   end)
 end
@@ -956,7 +970,5 @@ SlashCmdList['WHOLIB_DEBUG'] = function(msg)
     dbg = NOP
     print('Debug mode is off.')
   end
-  if command == 'status' then
-    showLibStatus(argument)
-  end
+  if command == 'status' then showLibStatus(argument) end
 end
