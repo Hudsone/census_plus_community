@@ -43,12 +43,7 @@ local dbg = NOP
 ---@class Task
 ---@field query string The query to send to the server.
 ---@field queue integer The queue to send the query to. Should only be WHOLIB_QUEUE_USER, WHOLIB_QUEUE_QUIET, or WHOLIB_QUEUE_SCANNING.
----@field flags integer
----@field callback function | string | nil The callback to call when the query is done. If it is a string, it will be treated as a method of the `handler`.
----@field handler table | nil The handler of the callback if `callback` is a string.
----@field gui boolean | nil
----@field console_show boolean | nil It is only specified interanlly in `ConsoleWho()` and used to mark if this Task has been shown in a "queued" message.
----@field whotoui boolean | nil
+---@field callback function The callback to call when the query is done. If it is a string, it will be treated as a method of the `handler`.
 
 -------------------------------------------------------------------------------
 
@@ -74,6 +69,12 @@ local function Initialize()
   end -- if
   lib['frame']:Hide()
 
+  ---Used to handle ther WHO_LIST_UPDATE event.
+  local function eventHandler(_, event, ...) lib[event](lib, ...) end
+  lib.whoListUpdater = CreateFrame("Frame")
+  lib.whoListUpdater:SetScript("OnEvent", eventHandler)
+  lib.whoListUpdater:Hide()
+
   ---@type Task[][]
   lib.Queue = {[1] = {}, [2] = {}, [3] = {}}
   ---This flag is set to `true` only when `AskWhoNext()` is called. Reset to
@@ -92,8 +93,11 @@ local function Initialize()
   lib.Debug = false
   lib.Cache = {}
   lib.CacheQueue = {}
-  ---Reacts to SetWhoToUi() in the hooked API.
+  ---Reacts to SetWhoToUi() in the hooked API. This variable always represent
+  ---the value set by the call of C_FriendList.SetWhoToUi().
   lib.SetWhoToUIState = false
+  lib.friendsFrameEventRegistered, _ = FriendsFrame:IsEventRegistered(
+                                           "WHO_LIST_UPDATE")
 
   lib.MinInterval = 2.5
   lib.MaxInterval = 10
@@ -139,6 +143,9 @@ end
 
 Initialize()
 
+---@enum SYSTEM_STATE
+local SYSTEM_STATE = {READY = 0, COOLING_DOWN = 1, WAITING_FOR_RESPONSE = 2}
+
 local queue_all = {
   [1] = 'WHOLIB_QUEUE_USER',
   [2] = 'WHOLIB_QUEUE_QUIET',
@@ -157,31 +164,18 @@ end
 ---
 ---The function is the main entry point for the library.
 ---@async
----@param defhandler table Usually LibWho itself since it was called with the form `LibWho:Who(...)`.
 ---@param query string The query to send to the server.
----@param opts {queue: integer, flags: number, callback: function | string | nil, handler: table | nil} A table of options.
-function lib.Who(defhandler, query, opts)
-  local self, args, usage = lib, {}, 'Who(query, [opts])'
-
+---@param callback function The callback that receives WhoInfo[].
+function lib:Who(query, callback)
+  local usage = 'Who(query, callback)'
+  ---@type Task
+  local args = {}
   args.query = self:CheckArgument(usage, 'query', 'string', query)
-  opts = self:CheckArgument(usage, 'opts', 'table', opts, {})
-  args.queue = self:CheckPreset(usage, 'opts.queue', queue_all, opts.queue,
-                                self.WHOLIB_QUEUE_SCANNING)
-  args.flags = self:CheckArgument(usage, 'opts.flags', 'number', opts.flags, 0)
-  args.callback, args.handler = self:CheckCallback(usage, 'opts.',
-                                                   opts.callback, opts.handler,
-                                                   defhandler)
+  args.callback = self:CheckArgument(usage, 'callback', 'function', callback)
+  args.queue = self.WHOLIB_QUEUE_QUIET
   -- now args - copied and verified from opts
 
-  if args.queue == self.WHOLIB_QUEUE_USER then
-    if WhoFrame:IsShown() then
-      self:GuiWho(args.query)
-    else
-      self:ConsoleWho(args.query)
-    end
-  else
-    self:AskWho(args)
-  end
+  self:AskWho(args)
 end
 
 local function ignoreRealm(name)
@@ -385,158 +379,18 @@ lib['frame']:SetScript("OnUpdate", function(frame, elapsed)
   end -- if
 end);
 
--- queue scheduler
-local queue_weights = {[1] = 0.6, [2] = 0.2, [3] = 0.2}
-local queue_bounds = {[1] = 0.6, [2] = 0.2, [3] = 0.2}
-
--- allow for single queries from the user to get processed faster
-local lastInstantQuery = time()
-local INSTANT_QUERY_MIN_INTERVAL = 60 -- only once every 1 min
-
-function lib:UpdateWeights()
-  local weightsum, sum, count = 0, 0, 0
-  for k, v in pairs(queue_weights) do
-    sum = sum + v
-    weightsum = weightsum + v * #self.Queue[k]
-  end
-
-  if weightsum == 0 then
-    for k, v in pairs(queue_weights) do queue_bounds[k] = v end
-    return
-  end
-
-  local adjust = sum / weightsum
-
-  for k, v in pairs(queue_bounds) do
-    queue_bounds[k] = queue_weights[k] * adjust * #self.Queue[k]
-  end
-end
-
+---Gets the next query from the scheduler.
+---
+---Priority: WHOLIB_QUEUE_USER > WHOLIB_QUEUE_QUIET > WHOLIB_QUEUE_SCANNING
+---@return integer queue_index, Task[] queue The queue to process.
 function lib:GetNextFromScheduler()
-  self:UpdateWeights()
-
-  -- Since an addon could just fill up the user q for instant processing
-  -- we have to limit instants to 1 per INSTANT_QUERY_MIN_INTERVAL
-  -- and only try instant fulfilment if it will empty the user queue
-  if #self.Queue[1] == 1 then
-    if time() - lastInstantQuery > INSTANT_QUERY_MIN_INTERVAL then
-      dbg("INSTANT")
-      lastInstantQuery = time()
-      return 1, self.Queue[1]
-    end
-  end
-
-  local n, i = math.random(), 0
-  repeat
-    i = i + 1
-    n = n - queue_bounds[i]
-  until i >= #self.Queue or n <= 0
-
-  dbg(("Q=%d, bound=%d"):format(i, queue_bounds[i]))
-
-  if #self.Queue[i] > 0 then
-    dbg(("Q=%d, bound=%d"):format(i, queue_bounds[i]))
-    return i, self.Queue[i]
-  else
-    dbg("Queues empty, waiting")
-  end
+  if #self.Queue[1] > 0 then return 1, self.Queue[1] end
+  if #self.Queue[2] > 0 then return 2, self.Queue[2] end
+  if #self.Queue[3] > 0 then return 3, self.Queue[3] end
+  return 0, {}
 end
 
 lib.queue_bounds = queue_bounds
-
----Asks the next who query.
----
----lib.WhoInProgress will be turned on if a query is found.
-function lib:AskWhoNext()
-  if lib.frame:IsShown() or not self.readyForNext then
-    dbg("Already waiting or not processing")
-    return
-  end
-  self.readyForNext = false
-  self:CancelPendingWhoNext() -- This looks unnecessary.
-
-  if self.WhoInProgress then
-    assert(self.Args, "self.Args should never be nil if WhoInProgress is true.")
-    -- if we had a who going, it didnt complete
-    dbg("TIMEOUT: " .. self.Args.query)
-    local args = self.Args
-    self.Args = nil
-    --		if args.info and self.CacheQueue[args.query] ~= nil then
-    dbg("Requeing " .. args.query)
-    tinsert(self.Queue[args.queue], args)
-    if args.console_show ~= nil then
-      DEFAULT_CHAT_FRAME:AddMessage(
-          ("Timeout on result of '%s' - retrying..."):format(args.query), 1, 1,
-          0)
-      args.console_show = true
-    end
-    --		end
-
-    -- Since we are in progress and got AskWhoNext invoked again, which might
-    -- indicate that queryInterval was set to a value too low. Increase it.
-    if queryInterval < lib.MaxInterval then
-      queryInterval = queryInterval + 0.5
-      dbg("--Throttling down to 1 who per " .. queryInterval .. "s")
-    end
-  end
-
-  self.WhoInProgress = false
-
-  ---@type Task | nil
-  local args = nil
-  local v, k
-  local kludge = 10
-  repeat
-    k, v = self:GetNextFromScheduler()
-    if not k then break end -- It doesn't look like this will ever happen.
-    -- If WhoFrame is shown and we only have WHOLIB_QUEUE_SCANNING to process,
-    -- we give up for now in order not to break the UI opened by the player.
-    if (WhoFrame:IsShown() and k > self.WHOLIB_QUEUE_QUIET) then break end
-    if (#v > 0) then
-      args = tremove(v, 1)
-      break
-    end
-    kludge = kludge - 1
-  until kludge <= 0 -- I don't know why to iterate 10 times here.
-
-  if args then
-    self.WhoInProgress = true
-    self.Result = {}
-    self.Args = args
-    self.Total = -1
-    if (args.console_show == true) then
-      DEFAULT_CHAT_FRAME:AddMessage(string.format(self.L['console_query'],
-                                                  args.query), 1, 1, 0)
-    end
-
-    if args.queue == self.WHOLIB_QUEUE_USER then
-      WhoFrameEditBox:SetText(args.query)
-      self.Quiet = false
-
-      if args.whotoui then
-        self.hooked.SetWhoToUi(args.whotoui)
-      else
-        self.hooked.SetWhoToUi(args.gui and true or false)
-      end
-    else
-      self.hooked.SetWhoToUi(true)
-      self.Quiet = true
-    end
-
-    dbg("QUERY: " .. args.query)
-    self.hooked.SendWho(args.query)
-  else
-    self.Args = nil
-    self.WhoInProgress = false
-  end
-
-  -- Keep processing the who queue if there is more work
-  if not self:AllQueuesEmpty() then
-    self:AskWhoNextIn5sec()
-  else
-    dbg("*** Done processing requests ***")
-  end
-end
 
 ---Inserts a who request to the queue. `self.readyForNext` is set to true.
 ---@param args Task The task to insert.
@@ -545,164 +399,6 @@ function lib:AskWho(args)
   dbg('[' .. args.queue .. '] added "' .. args.query .. '", queues=' ..
           #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3])
   self:TriggerEvent('WHOLIB_QUERY_ADDED')
-
-  -- This is quite strainge because it should be timeout-bound. Setting true
-  -- directly here can be misleading.
-
-  self.readyForNext = true
-end
-
-function lib:ReturnWho()
-  if not self.Args then
-    self.Quiet = nil
-    return
-  end
-
-  if (self.Args.queue == self.WHOLIB_QUEUE_QUIET or self.Args.queue ==
-      self.WHOLIB_QUEUE_SCANNING) then self.Quiet = nil end
-
-  if queryInterval > self.MinInterval then
-    queryInterval = queryInterval - 0.5
-    dbg("--Throttling up to 1 who per " .. queryInterval .. "s")
-  end
-
-  self.WhoInProgress = false
-  dbg("RESULT: " .. self.Args.query)
-  dbg(
-      '[' .. self.Args.queue .. '] returned "' .. self.Args.query .. '", total=' ..
-          self.Total .. ' , queues=' .. #self.Queue[1] .. '/' .. #self.Queue[2] ..
-          '/' .. #self.Queue[3])
-  local now = time()
-  local complete = (self.Total == #self.Result) and
-                       (self.Total < MAX_WHOS_FROM_SERVER)
-  for _, v in pairs(self.Result) do
-    if (self.Cache[v.Name] == nil) then
-      self.Cache[v.Name] = {inqueue = false, callback = {}}
-    end
-
-    local cachedName = self.Cache[v.Name]
-
-    cachedName.valid = true -- is now valid
-    cachedName.data = v -- update data
-    cachedName.data.Online = true -- player is online
-    cachedName.last = now -- update timestamp
-    if (cachedName.inqueue) then
-      if (self.Args.info and self.CacheQueue[self.Args.query] == v.Name) then
-        -- found by the query which was created to -> remove us from query
-        self.CacheQueue[self.Args.query] = nil
-      else
-        -- found by another query
-        for k2, v2 in pairs(self.CacheQueue) do
-          if (v2 == v.Name) then
-            for i = self.WHOLIB_QUEUE_QUIET, self.WHOLIB_QUEUE_SCANNING do
-              for k3, v3 in pairs(self.Queue[i]) do
-                if (v3.query == k2 and v3.info) then
-                  -- remove the query which was generated for this user, cause another query was faster...
-                  dbg("Found '" .. v.Name .. "' early via query '" ..
-                          self.Args.query .. "'")
-                  table.remove(self.Queue[i], k3)
-                  self.CacheQueue[k2] = nil
-                end
-              end
-            end
-          end
-        end
-      end
-      dbg('Info(' .. v.Name .. ') returned: on')
-      for _, v2 in pairs(cachedName.callback) do
-        self:RaiseCallback(v2, self:ReturnUserInfo(v.Name))
-      end
-      cachedName.callback = {}
-    end
-    cachedName.inqueue = false -- query is done
-  end
-  if (self.Args.info and self.CacheQueue[self.Args.query]) then
-    -- the query did not deliver the result => not online!
-    local name = self.CacheQueue[self.Args.query]
-    local cachedName = self.Cache[name]
-    if (cachedName.inqueue) then
-      -- nothing found (yet)
-      cachedName.valid = true -- is now valid
-      cachedName.inqueue = false -- query is done?
-      cachedName.last = now -- update timestamp
-      if (complete) then
-        cachedName.data.Online = false -- player is offline
-      else
-        cachedName.data.Online = nil -- player is unknown (more results from who than can be displayed)
-      end
-    end
-    dbg('Info(' .. name .. ') returned: ' ..
-            (cachedName.data.Online == false and 'off' or 'unkn'))
-    for _, v in pairs(cachedName.callback) do
-      self:RaiseCallback(v, self:ReturnUserInfo(name))
-    end
-    cachedName.callback = {}
-    self.CacheQueue[self.Args.query] = nil
-  end
-  self:RaiseCallback(self.Args, self.Args.query, self.Result, complete,
-                     self.Args.info)
-  self:TriggerEvent('WHOLIB_QUERY_RESULT', self.Args.query, self.Result,
-                    complete, self.Args.info)
-
-  if not self:AllQueuesEmpty() then self:AskWhoNextIn5sec() end
-end
-
----Makes a who request and gets GUI event later.
----
----This function is expected to be called from the source WHOLIB_QUEUE_USER.
----@param msg string Looks like the query itself. However, it's strange that it is also used to compare with localized strings. When invoked from lib:Who(), it is the query string.
-function lib:GuiWho(msg)
-  if (msg == self.L['gui_wait']) then return end
-
-  -- If there is any user query that is with `gui` set to true, we will give up
-  -- this time. But why?
-  for _, v in pairs(self.Queue[self.WHOLIB_QUEUE_USER]) do
-    if (v.gui == true) then return end
-  end
-  -- I guess that if WhoInProgress was true, we show the message on the edit box
-  -- of WhoFrame.
-  if (self.WhoInProgress) then WhoFrameEditBox:SetText(self.L['gui_wait']) end
-  -- I would say that this saved text should be used in somewhere after
-  -- WhoInProgress is done. However, it is not used anywhere and is saved in all
-  -- cases.
-  self.savedText = msg
-  self:AskWho({
-    query = msg,
-    queue = self.WHOLIB_QUEUE_USER,
-    flags = 0,
-    gui = true
-  })
-  WhoFrameEditBox:ClearFocus();
-end
-
----Makes a who request and gets console event later.
----@param msg string The query to send to the server.
-function lib:ConsoleWho(msg)
-  -- WhoFrameEditBox:SetText(msg)
-  local console_show = false
-  local q1 = self.Queue[self.WHOLIB_QUEUE_USER]
-  local q1count = #q1
-
-  if (q1count > 0 and q1[q1count].query == msg) then -- last query is itdenical: drop
-    return
-  end
-
-  if (q1count > 0 and q1[q1count].console_show == false) then -- display 'queued' if console and not yet shown
-    DEFAULT_CHAT_FRAME:AddMessage(string.format(self.L['console_queued'],
-                                                q1[q1count].query), 1, 1, 0)
-    q1[q1count].console_show = true
-  end
-  if (q1count > 0 or self.WhoInProgress) then
-    DEFAULT_CHAT_FRAME:AddMessage(string.format(self.L['console_queued'], msg),
-                                  1, 1, 0)
-    console_show = true
-  end
-  self:AskWho({
-    query = msg,
-    queue = self.WHOLIB_QUEUE_USER,
-    flags = 0,
-    console_show = console_show
-  })
 end
 
 function lib:ReturnUserInfo(name)
@@ -906,7 +602,7 @@ SLASH_WHOLIB_DEBUG1 = '/wholibdebug'
 
 -- functions to hook
 local hooks = {
-  'WhoFrameEditBox_OnEnterPressed'
+  -- 'WhoFrameEditBox_OnEnterPressed'
   --	'FriendsFrame_OnEvent',
 }
 
@@ -938,126 +634,201 @@ for name, _ in pairs(lib['hook']) do
 end -- for
 
 -- secure hook 'WhoFrame:Hide'
-if not lib['hooked']['WhoFrame_Hide'] then
-  lib['hooked']['WhoFrame_Hide'] = true
-  hooksecurefunc(WhoFrame, 'Hide',
-                 function(...) lib['hook']['WhoFrame_Hide'](lib, ...) end -- function
-  )
-end -- if
-
------ Coroutine based implementation (future)
--- function lib:sendWhoResult(val)
---    coroutine.yield(val)
--- end
---
--- function lib:sendWaitState(val)
---    coroutine.yield(val)
--- end
---
--- function lib:producer()
---    return coroutine.create(
---    function()
---        lib:AskWhoNext()
---        lib:sendWaitState(true)
---
---        -- Resumed look for data
---
---    end)
--- end
+--if not lib['hooked']['WhoFrame_Hide'] then
+--  lib['hooked']['WhoFrame_Hide'] = true
+--  hooksecurefunc(WhoFrame, 'Hide',
+--                 function(...) lib['hook']['WhoFrame_Hide'](lib, ...) end -- function
+--  )
+--end -- if
 
 ---
 --- hook replacements
 ---
 
-function lib.hook.SendWho(self, msg)
-  dbg("SendWho: " .. msg)
-  lib.AskWho(self, {
-    query = msg,
-    queue = lib.WHOLIB_QUEUE_USER,
-    whotoui = lib.SetWhoToUIState,
-    flags = 0
-  })
-end
+function lib.hook.SendWho(self, msg, ...) self.hooked.SendWho(msg, ...) end
 
 function lib.hook.WhoFrameEditBox_OnEnterPressed(self)
-  lib:GuiWho(WhoFrameEditBox:GetText())
+  -- lib:GuiWho(WhoFrameEditBox:GetText())
 end
 
---[[
-function lib.hook.FriendsFrame_OnEvent(self, ...)
-	if event ~= 'WHO_LIST_UPDATE' or not lib.Quiet then
-		lib.hooked.FriendsFrame_OnEvent(...)
-	end
-end
-]]
-
-hooksecurefunc(FriendsFrame, 'RegisterEvent', function(self, event)
-  if (event == "WHO_LIST_UPDATE") then self:UnregisterEvent("WHO_LIST_UPDATE"); end
+hooksecurefunc(FriendsFrame, 'RegisterEvent', function(_, event)
+  lib:cancelRegisterWhoListUpdateOnQuietQuery(event)
 end);
 
-function lib.hook.SetWhoToUi(self, state) lib.SetWhoToUIState = state end
+hooksecurefunc(FriendsFrame, 'UnregisterEvent',
+               function(_, event) lib:unsetFriendsFrameEventBit(event) end);
 
-function lib.hook.WhoFrame_Hide(self)
-  if (not lib.WhoInProgress) then lib:AskWhoNextIn5sec() end
+hooksecurefunc(FriendsFrame, 'UnregisterAllEvents',
+               function(_, event) lib:unsetFriendsFrameEventBit(event) end);
+
+function lib.hook.SetWhoToUi(self, state)
+  lib.SetWhoToUIState = state
+  lib:updateSetWhoToUi()
 end
+
+--function lib.hook.WhoFrame_Hide(self)
+--  if (not lib.WhoInProgress) then lib:AskWhoNextIn5sec() end
+--end
 
 ---
 --- WoW events
 ---
 
-local who_pattern = string.gsub(WHO_NUM_RESULTS, '%%d', '%%d%+')
-
-function lib:CHAT_MSG_SYSTEM(arg1)
-  if arg1 and arg1:find(who_pattern) then lib:ProcessWhoResults() end
-end
-
-FriendsFrame:UnregisterEvent("WHO_LIST_UPDATE")
-
+---Reacts to the `WHO_LIST_UPDATE` event.
+---
+---We need to do cleanups in reversed order from doQuietQuery and process the
+---results when the `WHO_LIST_UPDATE` event.
 function lib:WHO_LIST_UPDATE()
-  if not lib.Quiet then
-    WhoList_Update()
-    FriendsFrame_Update()
-  end
+  --  if not lib.Quiet then
+  --    WhoList_Update()
+  --    FriendsFrame_Update()
+  --  end
 
-  lib:ProcessWhoResults()
+  lib:restoreFriendsFrameRegistery()
+  lib.whoListUpdater:UnregisterEvent("WHO_LIST_UPDATE")
+  lib:ProcessWhoResults(lib.Args)
+  lib:updateSetWhoToUi()
+  lib:endWhoInProgress()
+  lib:startCoolDown()
 end
 
-function lib:ProcessWhoResults()
-  self.Result = self.Result or {}
-
-  local num
-  self.Total, num = C_FriendList.GetNumWhoResults()
-  for i = 1, num do
-    --	self.Result[i] = C_FriendList.GetWhoInfo(i)
-    local info = C_FriendList.GetWhoInfo(i)
-    -- backwards compatibility START
-    info.Name = info.fullName
-    info.Guild = info.fullGuildName
-    info.Level = info.level
-    info.Race = info.raceStr
-    info.Class = info.classStr
-    info.Zone = info.area
-    info.NoLocaleClass = info.filename
-    info.Sex = info.gender
-    -- backwards compatibility END
-    self.Result[i] = info
-  end
-
-  self:ReturnWho()
+---Marks the start of the Who request progress.
+---@param args Task The task to query.
+function lib:startWhoInProgress(args)
+  lib.Args = args
+  lib.WhoInProgress = true
 end
 
+---Ends the Who request progress.
+function lib:endWhoInProgress()
+  self.WhoInProgress = false
+  tremove(lib.Queue[self.Args.queue], 1)
+  self.Args = nil
+end
+
+---Processes the who results and invokes the callback.
+---@param args Task The task queried.
+function lib:ProcessWhoResults(args)
+  local numWhos, totalNumWhos = C_FriendList.GetNumWhoResults()
+  -- I actually don't know which one is the correct number of results.
+  whoCount = math.max(numWhos, totalNumWhos)
+  self.Result = {}
+  for i = 1, whoCount do self.Result[i] = C_FriendList.GetWhoInfo(i) end
+  args.callback(self.Result)
+end
+
+---Starts the cooldown process.
 ---
---- event activation
+---Blizzard throttled the `SendWho` function to prevent the server from being
+---overloaded. We try to create a timer to wait for the cooldown to be passed.
+function lib:startCoolDown() lib:AskWhoNextIn5sec() end
+
+---Updates the `SetWhoToUi` state.
 ---
+---Invoke this function when updating the `SetWhoToUi` state is required.
+function lib:updateSetWhoToUi()
+  local state = self:state()
+  -- If we are waiting for the response, it means we have committed a
+  -- `SendWho`, and we should not change the state.
+  if state ~= SYSTEM_STATE.WAITING_FOR_RESPONSE then
+    self.hooked.SetWhoToUi(self.SetWhoToUIState)
+  end
+end
 
-lib['frame']:UnregisterAllEvents();
+---Gets the current system state.
+---@return SYSTEM_STATE state The current system state.
+function lib:state()
+  if self.WhoInProgress then return SYSTEM_STATE.WAITING_FOR_RESPONSE end
+  if self.frame:IsShown() then return SYSTEM_STATE.COOLING_DOWN end
+  return SYSTEM_STATE.READY
+end
 
-lib['frame']:SetScript("OnEvent",
-                       function(frame, event, ...) lib[event](lib, ...) end);
+local function extendCooldown()
+  queryInterval = queryInterval + 0.5
+  queryInterval = math.min(queryInterval, lib.MaxInterval)
+end
 
-for _, name in pairs({'CHAT_MSG_SYSTEM', 'WHO_LIST_UPDATE'}) do
-  lib['frame']:RegisterEvent(name);
-end -- for
+---Cancels the register attempts for the WHO_LIST_UPDATE event.
+---
+---When we're doing a quiet query, we want to avoid the FriendsFrame from
+---updating the UI. Therefore, we need to cancel the register attempts for the
+---WHO_LIST_UPDATE event.
+---@param event string The event to cancel the register.
+function lib:cancelRegisterWhoListUpdateOnQuietQuery(event)
+  if event ~= "WHO_LIST_UPDATE" then return end
+  if self:state() == SYSTEM_STATE.WAITING_FOR_RESPONSE then
+    FriendsFrame:UnregisterEvent(event)
+    self.friendsFrameEventRegistered = true
+  end
+end
+
+---Unsets the bit of registering the WHO_LIST_UPDATE event.
+---
+---The self.friendsFrameEventRegistered is tracking the registration status of
+---the WHO_LIST_UPDATE event. This function is to unset the bit.
+---@param event any
+function lib:unsetFriendsFrameEventBit(event)
+  if event ~= "WHO_LIST_UPDATE" then return end
+  self.friendsFrameEventRegistered = false
+end
+
+---Unregisters the WHO_LIST_UPDATE event.
+---
+---This function is called when we need to unregister from the `WHO_LIST_UPDATE`
+---event in a quiet query because we want to remember the previous state.
+function lib:unregisterFriendsFrameFromWhoListUpdateEvent()
+  local previousState = self.friendsFrameEventRegistered
+  FriendsFrame:UnregisterEvent("WHO_LIST_UPDATE")
+  self.friendsFrameEventRegistered = previousState
+end
+
+---Restores the FriendsFrame registery for the WHO_LIST_UPDATE event.
+function lib:restoreFriendsFrameRegistery()
+  if self.friendsFrameEventRegistered then
+    FriendsFrame:RegisterEvent("WHO_LIST_UPDATE")
+  end
+end
+
+---Makes a quiet who query.
+---
+---A quiet who query is a query that is not shown in the UI. It tried the best
+---to prevent the interference with the player's UI.
+---
+---When we performs a SendWho, it is almostly always a WHO_LIST_UPDATE query
+---because the result usually exceeds 4. To be easier process, we always use
+---SetWhoToUi(true) to make it consistant. Therefore, we need to set this bit on
+---and restore it after the SendWho is done.
+---@param args Task The task to query.
+local function doQuietQuery(args)
+  assert(lib:state() ~= SYSTEM_STATE.COOLING_DOWN)
+  lib:startWhoInProgress(args)
+  lib.hooked.SetWhoToUi(true)
+  lib.hooked.SendWho(args.query)
+  lib.whoListUpdater:RegisterEvent("WHO_LIST_UPDATE")
+  lib:unregisterFriendsFrameFromWhoListUpdateEvent()
+end
+
+---Invoked when the hardware event is triggered.
+---
+---This function is the only available entry point that we can invoke a
+---`SendWho` function (hardware event protected).
+local function hardwareEventTriggered()
+  local state = lib:state()
+  dbg("Hardware event triggered, state=" .. state)
+  if state == SYSTEM_STATE.COOLING_DOWN then return end
+  -- If it's still waiting for the response after cooling down, it means the
+  -- server is throttling us. We should extend the cooldown.
+  if state == SYSTEM_STATE.WAITING_FOR_RESPONSE then extendCooldown() end
+  local idx, queue = lib:GetNextFromScheduler()
+  if idx == 0 then return end
+  if idx == lib.WHOLIB_QUEUE_USER then
+    -- To be designed.
+  else
+    doQuietQuery(queue[1])
+  end
+end
+
+WorldFrame:HookScript("OnMouseDown", function(_, _) hardwareEventTriggered() end)
 
 ---
 --- re-embed
@@ -1068,124 +839,124 @@ for target, _ in pairs(lib['embeds']) do
 end -- for
 
 ---
---- Old deprecated functions as of 8.1/1.13
+--- Tests
 ---
 
-local version, build, date, tocversion = GetBuildInfo()
-local isWoWClassic = tocversion >= 11302 and tocversion < 20000
+---@class Testcase
+---@field name string The name of the test.
+---@field func function The function to test.
 
-if isWoWClassic then
-  -- Friend list API update
+---@class Tester
+---@field tests Testcase[] The list of tests.
+---@field results boolean[] The list of results of the tests.
 
-  -- Use C_FriendList.GetNumFriends and C_FriendList.GetNumOnlineFriends instead
-  function GetNumFriends()
-    return C_FriendList.GetNumFriends(), C_FriendList.GetNumOnlineFriends();
+---@type Tester
+local tester = {tests = {}, results = {}}
+
+function tester:PushTest(name, func)
+  tinsert(self.tests, {name = name, func = func})
+end
+
+function tester:StartTest() for i, test in pairs(self.tests) do test.func(i) end end
+
+function tester:ReportTestResult(idx, result)
+  self.results[idx] = result
+  if #self.results == #self.tests then self:FinalizeTest() end
+end
+
+function tester:FinalizeTest()
+  local sPassed = '\124c0000FF00PASSED\124r'
+  local sFailed = '\124c00FF0000FAILED\124r'
+  print('Test results:')
+  local passed = 0
+  for i, result in pairs(self.results) do
+    print(string.format('%s: %s', result and sPassed or sFailed,
+                        self.tests[i].name))
+    if result then passed = passed + 1 end
   end
+  print(string.format('Total %d/%d tests passed.', passed, #self.tests))
+end
 
-  -- Use C_FriendList.GetFriendInfo or C_FriendList.GetFriendInfoByIndex instead
-  function GetFriendInfo(friend)
-    local info;
-    if type(friend) == "number" then
-      info = C_FriendList.GetFriendInfoByIndex(friend);
-    elseif type(friend) == "string" then
-      info = C_FriendList.GetFriendInfo(friend);
+local function unitTest_Tester_ShouldReportTestResults(idx)
+  tester:ReportTestResult(idx, true)
+end
+
+local function functionalTest_Who_ShouldReturnResults(test_idx)
+  print('Note: Please click to enable the hardware event.')
+  lib:Who('', function(result)
+    assert(#result >= 1)
+    tester:ReportTestResult(test_idx, true)
+  end)
+end
+
+SLASH_WHOLIB_TEST1 = '/wholib-test'
+SlashCmdList['WHOLIB_TEST'] = function(msg)
+  tester:PushTest('unitTest_Tester_ShouldReportTestResults',
+                  unitTest_Tester_ShouldReportTestResults)
+  tester:PushTest('functionalTest_Who_ShouldReturnResults',
+                  functionalTest_Who_ShouldReturnResults)
+  tester:StartTest()
+end
+
+---
+--- Debug Information
+---
+
+---Simple conversion of a table to a string.
+---@param t table The table to convert.
+---@param level? string Indentation string. Just leave it empty.
+---@return string v The string representation of the table.
+local function tableToString(t, level)
+  if not level then level = '  ' end
+  local output = ''
+  for k, v in pairs(t) do
+    local row
+    if type(v) == 'table' then
+      display_v = tableToString(v, level .. '  ')
+      row = string.format('%s%s:\n%s\n', level, k, display_v)
+    else
+      row = string.format('%s%s: %s\n', level, k, tostring(v))
     end
+    output = output .. row
+  end
+  return output
+end
 
-    if info then
-      local chatFlag = "";
-      if info.dnd then
-        chatFlag = CHAT_FLAG_DND;
-      elseif info.afk then
-        chatFlag = CHAT_FLAG_AFK;
+---Displays the library status.
+---@param argument? string The filter string of Lua match pattern.
+local function showLibStatus(argument)
+  local filter =
+      argument and function(x) return string.match(x, argument) end or
+          function(_) return true end
+  for k, v in pairs(lib) do
+    if filter(k) then
+      if type(v) == 'table' then
+        print('\124c00FFFF00' .. k .. '\124r')
+        print(tableToString(v))
+      else
+        print('\124c00FFFF00' .. k .. '\124r', v)
       end
-      return info.name, info.level, info.className, info.area, info.connected,
-             chatFlag, info.notes, info.referAFriend, info.guid;
     end
   end
+end
 
-  -- Use C_FriendList.SetSelectedFriend instead
-  SetSelectedFriend = C_FriendList.SetSelectedFriend;
+-- /wholib-debug on
+-- /wholib-debug off
+-- /wholib-debug status [match_string]
+--   e.g., /wholib-debug status Queue
 
-  -- Use C_FriendList.GetSelectedFriend instead
-  GetSelectedFriend = C_FriendList.GetSelectedFriend;
-
-  -- Use C_FriendList.AddOrRemoveFriend instead
-  AddOrRemoveFriend = C_FriendList.AddOrRemoveFriend;
-
-  -- Use C_FriendList.AddFriend instead
-  AddFriend = C_FriendList.AddFriend;
-
-  -- Use C_FriendList.RemoveFriend or C_FriendList.RemoveFriendByIndex instead
-  function RemoveFriend(friend)
-    if type(friend) == "number" then
-      C_FriendList.RemoveFriendByIndex(friend);
-    elseif type(friend) == "string" then
-      C_FriendList.RemoveFriend(friend);
-    end
+SLASH_WHOLIB_DEBUG1 = '/wholib-debug'
+SlashCmdList['WHOLIB_DEBUG'] = function(msg)
+  command, argument = strsplit(' ', msg, 2)
+  if command == 'on' then
+    dbg = print
+    print('Debug mode is on.')
   end
-
-  -- Use C_FriendList.ShowFriends instead
-  ShowFriends = C_FriendList.ShowFriends;
-
-  -- Use C_FriendList.SetFriendNotes or C_FriendList.SetFriendNotesByIndex instead
-  function SetFriendNotes(friend, notes)
-    if type(friend) == "number" then
-      C_FriendList.SetFriendNotesByIndex(friend, notes);
-    elseif type(friend) == "string" then
-      C_FriendList.SetFriendNotes(friend, notes);
-    end
+  if command == 'off' then
+    dbg = NOP
+    print('Debug mode is off.')
   end
-
-  -- Use C_FriendList.IsFriend instead. No longer accepts unit tokens.
-  IsCharacterFriend = C_FriendList.IsFriend;
-
-  -- Use C_FriendList.GetNumIgnores instead
-  GetNumIgnores = C_FriendList.GetNumIgnores;
-  GetNumIngores = C_FriendList.GetNumIgnores;
-
-  -- Use C_FriendList.GetIgnoreName instead
-  GetIgnoreName = C_FriendList.GetIgnoreName;
-
-  -- Use C_FriendList.SetSelectedIgnore instead
-  SetSelectedIgnore = C_FriendList.SetSelectedIgnore;
-
-  -- Use C_FriendList.GetSelectedIgnore instead
-  GetSelectedIgnore = C_FriendList.GetSelectedIgnore;
-
-  -- Use C_FriendList.AddOrDelIgnore instead
-  AddOrDelIgnore = C_FriendList.AddOrDelIgnore;
-
-  -- Use C_FriendList.AddIgnore instead
-  AddIgnore = C_FriendList.AddIgnore;
-
-  -- Use C_FriendList.DelIgnore or C_FriendList.DelIgnoreByIndex instead
-  function DelIgnore(friend)
-    if type(friend) == "number" then
-      C_FriendList.DelIgnoreByIndex(friend);
-    elseif type(friend) == "string" then
-      C_FriendList.DelIgnore(friend);
-    end
+  if command == 'status' then
+    showLibStatus(argument)
   end
-
-  -- Use C_FriendList.IsIgnored or the new C_FriendList.IsIgnoredByGuid instead.
-  IsIgnored = C_FriendList.IsIgnored;
-
-  -- Use C_FriendList.SendWho instead
-  SendWho = C_FriendList.SendWho;
-
-  -- Use C_FriendList.GetNumWhoResults instead
-  GetNumWhoResults = C_FriendList.GetNumWhoResults;
-
-  -- Use C_FriendList.GetWhoInfo instead
-  function GetWhoInfo(index)
-    local info = C_FriendList.GetWhoInfo(index);
-    return info.fullName, info.fullGuildName, info.level, info.raceStr,
-           info.classStr, info.area, info.filename, info.gender;
-  end
-
-  -- Use C_FriendList.SetWhoToUi instead
-  SetWhoToUI = C_FriendList.SetWhoToUi;
-
-  -- Use C_FriendList.SortWho instead
-  SortWho = C_FriendList.SortWho;
 end
