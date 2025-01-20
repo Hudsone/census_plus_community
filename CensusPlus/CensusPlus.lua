@@ -765,8 +765,8 @@ function InitializeExperimental()
 end
 
 
-function CP_ProcessWhoEvent(query, result, complete)
-
+function CP_ProcessWhoEvent(query, result)
+	complete = true
 	if( CPp.IsCensusPlusInProgress ~= true) then
 		return
 	end
@@ -4893,7 +4893,7 @@ function CensusPlus_DetermineServerDate()
 	local weekday, month, day,year;
 	local caltab
 	
-	caltab = C_Calendar.GetDate();
+	caltab = C_DateAndTime.GetCurrentCalendarTime()
 	strDate = string.format("%4d-%02d-%02d", caltab.year, caltab.month, caltab.monthDay);
 	return strDate;
 end
@@ -4971,14 +4971,14 @@ function CensusPlus_SendWho( msg )
 --]]
 		CensusButton:SetText(topwho)
 	end
---[[
+
 	if wholib then
-		wholib:Who(msg, {queue = wholib.WHOLIB_QUEUE_QUIET, flags = 0, callback = CP_ProcessWhoEvent} )
+		wholib:Who(msg, CP_ProcessWhoEvent)
 --		wholib:AskWho({query = msg, queue = wholib.WHOLIB_QUEUE_QUIET, callback = CP_ProcessWhoEvent })
 	else
 		SendWho( msg );
 	end
-]]	
+
 		whoMsg = msg
 
 	whoquery_active = true
