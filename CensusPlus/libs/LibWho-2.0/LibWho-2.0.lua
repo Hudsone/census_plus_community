@@ -3,7 +3,7 @@
 ---
 if WhoLibByALeX or WhoLib then
   -- the WhoLib-1.0 (WhoLibByALeX) or WhoLib (by Malex) is loaded -> fail!
-  error("an other WhoLib is already running - disable them first!\n")
+  error('an other WhoLib is already running - disable them first!\n')
   return
 end -- if
 
@@ -11,10 +11,10 @@ end -- if
 --- check version
 ---
 
-assert(LibStub, "LibWho-2.0 requires LibStub")
+assert(LibStub, 'LibWho-2.0 requires LibStub')
 
 local major_version = 'LibWho-2.0'
-local minor_version = tonumber(("2.0.179"):match("%d+%.%d+%.(%d+)")) or 99999
+local minor_version = tonumber(('2.0.179'):match('%d+%.%d+%.(%d+)')) or 99999
 
 local lib = LibStub:NewLibrary(major_version, minor_version)
 
@@ -25,7 +25,7 @@ if not lib then
 end
 
 -- todo: localizations
-lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
+lib.callbacks = lib.callbacks or LibStub('CallbackHandler-1.0'):New(lib)
 local callbacks = lib.callbacks
 
 local am = {}
@@ -51,14 +51,13 @@ local dbg = NOP
 ---
 ---The reason why to create a function to do so is to make it easier to fold.
 local function Initialize()
-
   ---
   --- initalize base
   ---
 
   if type(lib['hooked']) ~= 'table' then lib['hooked'] = {} end -- if
 
-  if type(lib['hook']) ~= 'table' then lib['hook'] = {} end -- if
+  if type(lib['hook']) ~= 'table' then lib['hook'] = {} end     -- if
 
   if type(lib['events']) ~= 'table' then lib['events'] = {} end -- if
 
@@ -71,8 +70,8 @@ local function Initialize()
 
   ---Used to handle ther WHO_LIST_UPDATE event.
   local function eventHandler(_, event, ...) lib[event](lib, ...) end
-  lib.whoListUpdater = CreateFrame("Frame")
-  lib.whoListUpdater:SetScript("OnEvent", eventHandler)
+  lib.whoListUpdater = CreateFrame('Frame')
+  lib.whoListUpdater:SetScript('OnEvent', eventHandler)
   lib.whoListUpdater:Hide()
 
   ---@type Task[][]
@@ -97,7 +96,7 @@ local function Initialize()
   ---the value set by the call of C_FriendList.SetWhoToUi().
   lib.SetWhoToUIState = false
   lib.friendsFrameEventRegistered, _ = FriendsFrame:IsEventRegistered(
-                                           "WHO_LIST_UPDATE")
+    'WHO_LIST_UPDATE')
 
   lib.MinInterval = 2.5
   lib.MaxInterval = 10
@@ -106,7 +105,7 @@ local function Initialize()
   --- locale
   ---
 
-  if (GetLocale() == "ruRU") then
+  if (GetLocale() == 'ruRU') then
     lib.L = {
       ['console_queued'] = 'Добавлено в очередь "/who %s"',
       ['console_query'] = 'Результат "/who %s"',
@@ -126,9 +125,15 @@ local function Initialize()
   ---
 
   lib['external'] = {
-    'WHOLIB_QUEUE_USER', 'WHOLIB_QUEUE_QUIET', 'WHOLIB_QUEUE_SCANNING',
-    'WHOLIB_FLAG_ALWAYS_CALLBACK', 'Who', 'UserInfo', 'CachedUserInfo',
-    'GetWhoLibDebug', 'SetWhoLibDebug'
+    'WHOLIB_QUEUE_USER',
+    'WHOLIB_QUEUE_QUIET',
+    'WHOLIB_QUEUE_SCANNING',
+    'WHOLIB_FLAG_ALWAYS_CALLBACK',
+    'Who',
+    'UserInfo',
+    'CachedUserInfo',
+    'GetWhoLibDebug',
+    'SetWhoLibDebug'
     --	'RegisterWhoLibEvent',
   }
 
@@ -179,7 +184,7 @@ function lib:Who(query, callback)
 end
 
 local function ignoreRealm(name)
-  local _, realm = string.split("-", name)
+  local _, realm = string.split('-', name)
   local connectedServers = GetAutoCompleteRealms()
   if connectedServers then
     for i = 1, #connectedServers do
@@ -199,7 +204,7 @@ function lib.UserInfo(defhandler, name, opts)
 
   -- There is no api to tell connected realms from cross realm by name. As such, we check known connections table before excluding who inquiry
   -- UnitRealmRelationship and UnitIsSameServer don't work with "name". They require unitID so they are useless here
-  if name:find("%-") and ignoreRealm(name) then return end
+  if name:find('%-') and ignoreRealm(name) then return end
 
   args.name = self:CapitalizeInitial(name)
   opts = self:CheckArgument(usage, 'opts', 'table', opts, {})
@@ -218,7 +223,7 @@ function lib.UserInfo(defhandler, name, opts)
   if (cachedName ~= nil) then
     -- user is in cache
     if (cachedName.valid == true and
-        (args.timeout < 0 or cachedName.last + args.timeout * 60 > now)) then
+          (args.timeout < 0 or cachedName.last + args.timeout * 60 > now)) then
       -- cache is valid and timeout is in range
       -- dbg('Info(' .. args.name ..') returned immedeatly')
       if (bit.band(args.flags, self.WHOLIB_FLAG_ALWAYS_CALLBACK) ~= 0) then
@@ -238,7 +243,9 @@ function lib.UserInfo(defhandler, name, opts)
       valid = false,
       inqueue = false,
       callback = {},
-      data = {Name = args.name},
+      data = {
+        Name = args.name
+      },
       last = now
     }
   end
@@ -251,19 +258,14 @@ function lib.UserInfo(defhandler, name, opts)
     dbg('Info(' .. args.name .. ') returned cause it\'s already searching')
     return nil
   end
-  if (GetLocale() == "ruRU") then -- in ruRU with n- not show information about player in WIM addon
+  if (GetLocale() == 'ruRU') then -- in ruRU with n- not show information about player in WIM addon
     if args.name and args.name:len() > 0 then
       local query = 'и-"' .. args.name .. '"'
       cachedName.inqueue = true
       if (args.callback ~= nil) then tinsert(cachedName.callback, args) end
       self.CacheQueue[query] = args.name
       dbg('Info(' .. args.name .. ') added to queue')
-      self:AskWho({
-        query = query,
-        queue = args.queue,
-        flags = 0,
-        info = args.name
-      })
+      self:AskWho({query = query, queue = args.queue, flags = 0, info = args.name})
     end
   else
     if args.name and args.name:len() > 0 then
@@ -272,12 +274,7 @@ function lib.UserInfo(defhandler, name, opts)
       if (args.callback ~= nil) then tinsert(cachedName.callback, args) end
       self.CacheQueue[query] = args.name
       dbg('Info(' .. args.name .. ') added to queue')
-      self:AskWho({
-        query = query,
-        queue = args.queue,
-        flags = 0,
-        info = args.name
-      })
+      self:AskWho({query = query, queue = args.queue, flags = 0, info = args.name})
     end
   end
   return nil
@@ -287,7 +284,7 @@ function lib.CachedUserInfo(_, name)
   local self, usage = lib, 'CachedUserInfo(name)'
 
   name = self:CapitalizeInitial(
-             self:CheckArgument(usage, 'name', 'string', name))
+    self:CheckArgument(usage, 'name', 'string', name))
 
   if self.Cache[name] == nil then
     return nil
@@ -336,7 +333,7 @@ end
 
 function lib:AllQueuesEmpty()
   local queueCount = #self.Queue[1] + #self.Queue[2] + #self.Queue[3] +
-                         #self.CacheQueue
+      #self.CacheQueue
 
   -- Be sure that we have cleared the in-progress status
   if self.WhoInProgress then queueCount = queueCount + 1 end
@@ -352,7 +349,7 @@ function lib:GetQueryInterval() return queryInterval end
 function lib:AskWhoNextIn5sec()
   if self.frame:IsShown() then return end
 
-  dbg("Waiting to send next who")
+  dbg('Waiting to send next who')
   self.Timeout_time = queryInterval
   self['frame']:Show()
 end
@@ -371,7 +368,7 @@ end
 -- 2. If the timeout is less than or equal to 0, the frame is hidden and
 --    lib.readyForNext is set to true.
 -- 3. This means that we are ready for the next query.
-lib['frame']:SetScript("OnUpdate", function(frame, elapsed)
+lib['frame']:SetScript('OnUpdate', function(frame, elapsed)
   lib.Timeout_time = lib.Timeout_time - elapsed
   if lib.Timeout_time <= 0 then
     lib['frame']:Hide()
@@ -397,13 +394,13 @@ lib.queue_bounds = queue_bounds
 function lib:AskWho(args)
   tinsert(self.Queue[args.queue], args)
   dbg('[' .. args.queue .. '] added "' .. args.query .. '", queues=' ..
-          #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3])
+    #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3])
   self:TriggerEvent('WHOLIB_QUERY_ADDED')
 end
 
 function lib:ReturnUserInfo(name)
   if (name ~= nil and self ~= nil and self.Cache ~= nil and self.Cache[name] ~=
-      nil) then
+        nil) then
     return self.Cache[name].data, (time() - self.Cache[name].last) / 60
   end
 end
@@ -413,7 +410,7 @@ function lib:RaiseCallback(args, ...)
     args.callback(self:DupAll(...))
   elseif args.callback then -- must be a string
     args.handler[args.callback](args.handler, self:DupAll(...))
-  end -- if
+  end                       -- if
 end
 
 ---Validates the arguments by type.
@@ -463,7 +460,7 @@ function lib:CheckPreset(func, name, preset, arg, defarg)
       else
         table.insert(p, v)
       end -- if
-    end -- for
+    end   -- for
     error(string.format("%s: '%s' - one of %s%s expected got %s", func, name,
                         (defarg ~= nil) and 'nil, ' or '',
                         table.concat(p, ', '), self:simple_dump(arg)), 3)
@@ -490,8 +487,8 @@ function lib:CheckCallback(func, prefix, callback, handler, defhandler, nonil)
     -- simple function
     if handler ~= nil then
       error(
-          string.format("%s: '%shandler' - nil expected got %s", func, prefix,
-                        type(arg)), 3)
+        string.format("%s: '%shandler' - nil expected got %s", func, prefix,
+                      type(arg)), 3)
     end -- if
   elseif type(callback) == 'string' then
     -- method
@@ -503,8 +500,8 @@ function lib:CheckCallback(func, prefix, callback, handler, defhandler, nonil)
     end -- if
   else
     error(string.format(
-              "%s: '%scallback' - %sfunction or string expected got %s", func,
-              prefix, nonil and 'nil or ' or '', type(arg)), 3)
+            "%s: '%scallback' - %sfunction or string expected got %s", func,
+            prefix, nonil and 'nil or ' or '', type(arg)), 3)
   end -- if
 
   return callback, handler
@@ -531,7 +528,7 @@ function lib:Dup(from)
     else
       to[k] = v
     end -- if
-  end -- for
+  end   -- for
 
   return to
 end
@@ -546,7 +543,7 @@ function lib:DupAll(x, ...)
   end -- if
 end
 
-local MULTIBYTE_FIRST_CHAR = "^([\192-\255]?%a?[\128-\191]*)"
+local MULTIBYTE_FIRST_CHAR = '^([\192-\255]?%a?[\128-\191]*)'
 
 function lib:CapitalizeInitial(name)
   return name:gsub(MULTIBYTE_FIRST_CHAR, string.upper, 1)
@@ -611,8 +608,8 @@ for _, name in pairs(hooks) do
   if not lib['hooked'][name] then
     lib['hooked'][name] = _G[name]
     _G[name] = function(...) lib.hook[name](lib, ...) end -- function
-  end -- if
-end -- for
+  end                                                     -- if
+end                                                       -- for
 
 -- C_FriendList functions to hook
 local CFL_hooks = {'SendWho', 'SetWhoToUi'}
@@ -620,10 +617,10 @@ local CFL_hooks = {'SendWho', 'SetWhoToUi'}
 -- hook all C_FriendList functions (which are not yet hooked)
 for _, name in pairs(CFL_hooks) do
   if not lib['hooked'][name] then
-    lib['hooked'][name] = _G["C_FriendList"][name]
-    _G["C_FriendList"][name] = function(...) lib.hook[name](lib, ...) end -- function
-  end -- if
-end -- for
+    lib['hooked'][name] = _G['C_FriendList'][name]
+    _G['C_FriendList'][name] = function(...) lib.hook[name](lib, ...) end -- function
+  end                                                                     -- if
+end                                                                       -- for
 
 -- fake 'WhoFrame:Hide' as hooked
 table.insert(hooks, 'WhoFrame_Hide')
@@ -631,7 +628,7 @@ table.insert(hooks, 'WhoFrame_Hide')
 -- check for unused hooks -> remove function
 for name, _ in pairs(lib['hook']) do
   if not hooks[name] then lib['hook'][name] = function() end end -- if
-end -- for
+end                                                              -- for
 
 -- secure hook 'WhoFrame:Hide'
 -- if not lib['hooked']['WhoFrame_Hide'] then
@@ -685,7 +682,7 @@ function lib:WHO_LIST_UPDATE()
   --  end
 
   lib:restoreFriendsFrameRegistery()
-  lib.whoListUpdater:UnregisterEvent("WHO_LIST_UPDATE")
+  lib.whoListUpdater:UnregisterEvent('WHO_LIST_UPDATE')
   lib:ProcessWhoResults(lib.Args)
   lib:updateSetWhoToUi()
   lib:endWhoInProgress()
@@ -768,7 +765,7 @@ end
 ---WHO_LIST_UPDATE event.
 ---@param event string The event to cancel the register.
 function lib:cancelRegisterWhoListUpdateOnQuietQuery(event)
-  if event ~= "WHO_LIST_UPDATE" then return end
+  if event ~= 'WHO_LIST_UPDATE' then return end
   if self:state() == SYSTEM_STATE.WAITING_FOR_RESPONSE then
     FriendsFrame:UnregisterEvent(event)
     self.friendsFrameEventRegistered = true
@@ -781,7 +778,7 @@ end
 ---the WHO_LIST_UPDATE event. This function is to unset the bit.
 ---@param event any
 function lib:unsetFriendsFrameEventBit(event)
-  if event ~= "WHO_LIST_UPDATE" then return end
+  if event ~= 'WHO_LIST_UPDATE' then return end
   self.friendsFrameEventRegistered = false
 end
 
@@ -791,14 +788,14 @@ end
 ---event in a quiet query because we want to remember the previous state.
 function lib:unregisterFriendsFrameFromWhoListUpdateEvent()
   local previousState = self.friendsFrameEventRegistered
-  FriendsFrame:UnregisterEvent("WHO_LIST_UPDATE")
+  FriendsFrame:UnregisterEvent('WHO_LIST_UPDATE')
   self.friendsFrameEventRegistered = previousState
 end
 
 ---Restores the FriendsFrame registery for the WHO_LIST_UPDATE event.
 function lib:restoreFriendsFrameRegistery()
   if self.friendsFrameEventRegistered then
-    FriendsFrame:RegisterEvent("WHO_LIST_UPDATE")
+    FriendsFrame:RegisterEvent('WHO_LIST_UPDATE')
   end
 end
 
@@ -817,7 +814,7 @@ local function doQuietQuery(args)
   lib:startWhoInProgress(args)
   lib.hooked.SetWhoToUi(true)
   lib.hooked.SendWho(args.query)
-  lib.whoListUpdater:RegisterEvent("WHO_LIST_UPDATE")
+  lib.whoListUpdater:RegisterEvent('WHO_LIST_UPDATE')
   lib:unregisterFriendsFrameFromWhoListUpdateEvent()
 end
 
@@ -827,7 +824,7 @@ end
 ---`SendWho` function (hardware event protected).
 local function hardwareEventTriggered()
   local state = lib:state()
-  dbg("Hardware event triggered, state=" .. state)
+  dbg('Hardware event triggered, state=' .. state)
   if state == SYSTEM_STATE.COOLING_DOWN then return end
   -- If it's still waiting for the response after cooling down, it means the
   -- server is throttling us. We should extend the cooldown.
@@ -841,7 +838,7 @@ local function hardwareEventTriggered()
   end
 end
 
-WorldFrame:HookScript("OnMouseDown", function(_, _) hardwareEventTriggered() end)
+WorldFrame:HookScript('OnMouseDown', function(_, _) hardwareEventTriggered() end)
 
 ---
 --- re-embed
@@ -849,7 +846,7 @@ WorldFrame:HookScript("OnMouseDown", function(_, _) hardwareEventTriggered() end
 
 for target, _ in pairs(lib['embeds']) do
   if type(target) == 'table' then lib:Embed(target) end -- if
-end -- for
+end                                                     -- for
 
 ---
 --- Tests
@@ -941,7 +938,7 @@ end
 local function showLibStatus(argument)
   local filter =
       argument and function(x) return string.match(x, argument) end or
-          function(_) return true end
+      function(_) return true end
   for k, v in pairs(lib) do
     if filter(k) then
       if type(v) == 'table' then
