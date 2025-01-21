@@ -170,7 +170,7 @@ end
 ---The function is the main entry point for the library.
 ---@async
 ---@param query string The query to send to the server.
----@param callback function The callback that receives (query string, results WhoInfo[]).
+---@param callback function The callback that receives `(query string, results WhoInfo[])`.
 function lib:Who(query, callback)
   local usage = 'Who(query, callback)'
   ---@type Task
