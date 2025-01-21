@@ -35,7 +35,7 @@ am.__tostring = function() return major_version end
 setmetatable(lib, am)
 
 local function dbgfunc(...) if lib.Debug then print(...) end end
-local function NOP() return end
+local function NOP(...) return end
 local dbg = NOP
 
 -- Class Definitions ----------------------------------------------------------
@@ -343,7 +343,7 @@ local queryInterval = 5
 
 function lib:GetQueryInterval() return queryInterval end
 
----Triggers a countdown process for 5 secs to turn on `lib.readyForNext`.
+---Triggers a countdown process for 5 secs as cooldown.
 function lib:AskWhoNextIn5sec()
   if self.frame:IsShown() then return end
 
@@ -352,25 +352,18 @@ function lib:AskWhoNextIn5sec()
   self['frame']:Show()
 end
 
----Cancels the countdown process of `lib.readyForNext` (hides the frame).
-function lib:CancelPendingWhoNext()
-  lib['frame']:Hide()
-  ---If this bit is set to `true`, it means the server timeout should be passed
-  ---and the next query can be proceeded.
-  lib.readyForNext = false
-end
-
 -- This looks like attampting to control the bit of lib.readyForNext.
 -- The logic is as the following:
 -- 1. When the frame is shown, the timeout is decreased by the elapsed time.
 -- 2. If the timeout is less than or equal to 0, the frame is hidden and
 --    lib.readyForNext is set to true.
 -- 3. This means that we are ready for the next query.
+-- lib.readyForNext is no longer used, the frame itself is used to control the
+-- cooldown.
 lib['frame']:SetScript('OnUpdate', function(frame, elapsed)
   lib.Timeout_time = lib.Timeout_time - elapsed
   if lib.Timeout_time <= 0 then
     lib['frame']:Hide()
-    lib.readyForNext = true
   end -- if
 end);
 
@@ -387,7 +380,7 @@ end
 
 lib.queue_bounds = queue_bounds
 
----Inserts a who request to the queue. `self.readyForNext` is set to true.
+---Inserts a who request to the queue.
 ---@param args Task The task to insert.
 function lib:AskWho(args)
   tinsert(self.Queue[args.queue], args)
@@ -574,14 +567,6 @@ function lib:TriggerEvent(event, ...) callbacks:Fire(event, ...) end
 --  end
 -- end
 --
--- SlashCmdList['WHOLIB_DEBUG'] = function()
---  -- /wholibdebug: toggle debug on/off
---  local self = lib
---
---  self:SetWhoLibDebug(not self.Debug)
--- end
-
-SLASH_WHOLIB_DEBUG1 = '/wholibdebug'
 
 -- Why to make these hooks?
 -- I would think that we want to replace the original functions. The intention
@@ -706,10 +691,10 @@ end
 function lib:ProcessWhoResults(args)
   local numWhos, totalNumWhos = C_FriendList.GetNumWhoResults()
   -- I actually don't know which one is the correct number of results.
-  whoCount = math.max(numWhos, totalNumWhos)
+  local whoCount = math.max(numWhos, totalNumWhos)
   self.Result = {}
   for i = 1, whoCount do
-    info = C_FriendList.GetWhoInfo(i)
+    local info = C_FriendList.GetWhoInfo(i)
     -- backwards compatibility START
     info.Name = info.fullName
     info.Guild = info.fullGuildName
@@ -860,7 +845,7 @@ local function tableToString(t, level)
   for k, v in pairs(t) do
     local row
     if type(v) == 'table' then
-      display_v = tableToString(v, level .. '  ')
+      local display_v = tableToString(v, level .. '  ')
       row = string.format('%s%s:\n%s\n', level, k, display_v)
     else
       row = string.format('%s%s: %s\n', level, k, tostring(v))
@@ -895,7 +880,7 @@ end
 
 SLASH_WHOLIB_DEBUG1 = '/wholib-debug'
 SlashCmdList['WHOLIB_DEBUG'] = function(msg)
-  command, argument = strsplit(' ', msg, 2)
+  local command, argument = strsplit(' ', msg, 2)
   if command == 'on' then
     lib:SetWhoLibDebug(true)
     print('Debug mode is on.')
