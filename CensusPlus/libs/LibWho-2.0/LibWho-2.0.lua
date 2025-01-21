@@ -960,11 +960,11 @@ SLASH_WHOLIB_DEBUG1 = '/wholib-debug'
 SlashCmdList['WHOLIB_DEBUG'] = function(msg)
   command, argument = strsplit(' ', msg, 2)
   if command == 'on' then
-    dbg = print
+    lib:SetWhoLibDebug(true)
     print('Debug mode is on.')
   end
   if command == 'off' then
-    dbg = NOP
+    lib:SetWhoLibDebug(false)
     print('Debug mode is off.')
   end
   if command == 'status' then showLibStatus(argument) end
