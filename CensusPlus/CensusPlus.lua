@@ -5263,11 +5263,7 @@ function ManualWho()
     end
     CPp.LastManualWho = time()
     if (whoquery_active) then
-      wholib:Who(whoMsg, {
-        queue = wholib.WHOLIB_QUEUE_QUIET,
-        flags = 0,
-        callback = CP_ProcessWhoEvent
-      })
+      wholib:Who(whoMsg, CP_ProcessWhoEvent)
       WhoFrameEditBox:SetText(whoMsg)
       WhoFrameWhoButton:Click()
     end
