@@ -169,15 +169,15 @@ end
 ---
 ---The function is the main entry point for the library.
 ---@async
----@param query string The query to send to the server.
----@param callback function The callback that receives `(query string, results WhoInfo[])`.
+---@param query? string The query to send to the server.
+---@param callback? function The callback that receives `(query string, results WhoInfo[])`.
 function lib:Who(query, callback)
   local usage = 'Who(query, callback)'
   ---@type Task
-  local args = {}
-  args.query = self:CheckArgument(usage, 'query', 'string', query)
-  args.callback = self:CheckArgument(usage, 'callback', 'function', callback)
-  args.queue = self.WHOLIB_QUEUE_QUIET
+  local args = {query = '', callback = NOP, queue = self.WHOLIB_QUEUE_QUIET}
+  args.query = self:CheckArgument(usage, 'query', 'string', query, args.query)
+  args.callback = self:CheckArgument(usage, 'callback', 'function', callback,
+                                     args.callback)
   -- now args - copied and verified from opts
 
   self:AskWho(args)
@@ -364,6 +364,7 @@ lib['frame']:SetScript('OnUpdate', function(frame, elapsed)
   lib.Timeout_time = lib.Timeout_time - elapsed
   if lib.Timeout_time <= 0 then
     lib['frame']:Hide()
+    lib:TriggerEvent('WHOLIB_READY')
   end -- if
 end);
 
@@ -544,7 +545,7 @@ end
 --- user events (Using CallbackHandler)
 ---
 
-lib.PossibleEvents = {'WHOLIB_QUERY_RESULT', 'WHOLIB_QUERY_ADDED'}
+lib.PossibleEvents = {'WHOLIB_QUERY_RESULT', 'WHOLIB_QUERY_ADDED', 'WHOLIB_READY'}
 
 function lib:TriggerEvent(event, ...) callbacks:Fire(event, ...) end
 

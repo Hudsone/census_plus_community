@@ -34,7 +34,6 @@ local function unitTest_Tester_ShouldReportTestResults(test_idx)
 end
 
 local function functionalTest_Who_ShouldReturnResults(test_idx)
-  print('Note: Please click to enable the hardware event.')
   lib:Who('0-500', function(query, result)
     assert(#result >= 1)
     assert(query == '0-500')
@@ -63,7 +62,13 @@ function tester:PushTest(name, func)
   tinsert(self.tests, {name = name, func = func})
 end
 
-function tester:StartTest() for i, test in pairs(self.tests) do test.func(i) end end
+function tester:StartTest()
+  print('Note: Please click to enable the hardware event.')
+  lib.RegisterCallback(self, 'WHOLIB_READY', function(...)
+    print('Please click to continue the tests.')
+  end)
+  for i, test in pairs(self.tests) do test.func(i) end
+end
 
 function tester:ReportTestResult(idx, result)
   self.results[idx] = result
@@ -71,6 +76,7 @@ function tester:ReportTestResult(idx, result)
 end
 
 function tester:FinalizeTest()
+  lib.UnregisterCallback(self, 'WHOLIB_READY')
   local sPassed = '\124c0000FF00PASSED\124r'
   local sFailed = '\124c00FF0000FAILED\124r'
   print('Test results:')
@@ -81,4 +87,5 @@ function tester:FinalizeTest()
     if result then passed = passed + 1 end
   end
   print(string.format('Total %d/%d tests passed.', passed, #self.tests))
+  self.tests, self.results = {}, {}
 end
