@@ -149,7 +149,12 @@ end
 Initialize()
 
 ---@enum SYSTEM_STATE
-local SYSTEM_STATE = {READY = 0, COOLING_DOWN = 1, WAITING_FOR_RESPONSE = 2}
+local SYSTEM_STATE = {
+  READY = 0,
+  COOLING_DOWN = 1,
+  WAITING_FOR_RESPONSE = 2,
+  INSTANT = 3
+}
 
 local queue_all = {
   [1] = 'WHOLIB_QUEUE_USER',
@@ -368,6 +373,10 @@ lib['frame']:SetScript('OnUpdate', function(frame, elapsed)
   end -- if
 end);
 
+-- allow for single queries from the user to get processed faster
+local lastInstantQuery = time()
+local INSTANT_QUERY_MIN_INTERVAL = 60 -- only once every 1 min
+
 ---Gets the next query from the scheduler.
 ---
 ---Priority: WHOLIB_QUEUE_USER > WHOLIB_QUEUE_QUIET > WHOLIB_QUEUE_SCANNING
@@ -384,7 +393,13 @@ lib.queue_bounds = queue_bounds
 ---Inserts a who request to the queue.
 ---@param args Task The task to insert.
 function lib:AskWho(args)
-  tinsert(self.Queue[args.queue], args)
+  if args.queue == self.WHOLIB_QUEUE_USER then
+    -- To simulate the API behavior, the newest query will just replace the
+    -- previous ones.
+    self.Queue[self.WHOLIB_QUEUE_USER][1] = args
+  else
+    tinsert(self.Queue[args.queue], args)
+  end
   dbg('[' .. args.queue .. '] added "' .. args.query .. '", queues=' ..
     #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3])
   self:TriggerEvent('WHOLIB_QUERY_ADDED')
@@ -626,7 +641,34 @@ end                                                              -- for
 --- hook replacements
 ---
 
-function lib.hook.SendWho(self, msg, ...) self.hooked.SendWho(msg, ...) end
+---The hook function that replaces C_FriendList.SendWho.
+---
+---Since we may constantly doing who request, and it can lead to messing the
+---API call, which the caller will get throttled and the expected result can
+---never reach.
+---
+---By queuing the API call and invoke it at the first priority, we tried to
+---simulate the API behavior as soon as possible.
+---@param self table Should be the WhoLib entity.
+---@param msg string The query string.
+---@param origin? Enum.SocialWhoOrigin
+function lib.hook.SendWho(self, msg, origin, ...)
+  if lib:state() == SYSTEM_STATE.INSTANT then
+    lib:InvokeSendWhoAPI(msg, origin)
+  else
+    lib:AskWho({queue = self.WHOLIB_QUEUE_USER, query = msg, callback = NOP})
+  end
+end
+
+---Invokes SendWho API.
+---
+---All invocation to `lib.hooked.SendWho` should call this function instead.
+---@param query string
+---@param origin? Enum.SocialWhoOrigin
+function lib:InvokeSendWhoAPI(query, origin)
+  self.hooked.SendWho(query, origin)
+  lastInstantQuery = time()
+end
 
 function lib.hook.WhoFrameEditBox_OnEnterPressed(self)
   -- lib:GuiWho(WhoFrameEditBox:GetText())
@@ -734,6 +776,10 @@ end
 function lib:state()
   if self.WhoInProgress then return SYSTEM_STATE.WAITING_FOR_RESPONSE end
   if self.frame:IsShown() then return SYSTEM_STATE.COOLING_DOWN end
+  if time() - lastInstantQuery > INSTANT_QUERY_MIN_INTERVAL then
+    return
+        SYSTEM_STATE.INSTANT
+  end
   return SYSTEM_STATE.READY
 end
 
@@ -797,9 +843,18 @@ local function doQuietQuery(args)
   assert(lib:state() ~= SYSTEM_STATE.COOLING_DOWN)
   lib:startWhoInProgress(args)
   lib.hooked.SetWhoToUi(true)
-  lib.hooked.SendWho(args.query)
+  lib:InvokeSendWhoAPI(args.query)
   lib.whoListUpdater:RegisterEvent('WHO_LIST_UPDATE')
   lib:unregisterFriendsFrameFromWhoListUpdateEvent()
+end
+
+---Makes an instant query.
+---
+---This should come directly from the UI event (usually a player invoked one).
+---@param args Task
+local function doInstantQuery(args)
+  lib:InvokeSendWhoAPI(args.query)
+  tremove(lib.Queue[args.queue])
 end
 
 ---Invoked when the hardware event is triggered.
@@ -816,7 +871,12 @@ local function hardwareEventTriggered()
   local idx, queue = lib:GetNextFromScheduler()
   if idx == 0 then return end
   if idx == lib.WHOLIB_QUEUE_USER then
-    -- To be designed.
+    if state == SYSTEM_STATE.INSTANT then
+      doInstantQuery(queue[1])
+    else
+      -- To be designed.
+      doQuietQuery(queue[1])
+    end
   else
     doQuietQuery(queue[1])
   end
@@ -866,7 +926,10 @@ local function showLibStatus(argument)
     if filter(k) then
       if type(v) == 'table' then
         print('\124c00FFFF00' .. k .. '\124r')
-        print(tableToString(v))
+        local lines = strsplittable('\n', tableToString(v))
+        for _, line in pairs(lines) do
+          print(line)
+        end
       else
         print('\124c00FFFF00' .. k .. '\124r', v)
       end

@@ -41,6 +41,28 @@ local function functionalTest_Who_ShouldReturnResults(test_idx)
   end)
 end
 
+local function functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery(
+    test_idx)
+  local function sendWho()
+    tester:DebugMessage('Quiet who 0-10 done')
+    local frame = tester:GetAFrame()
+    local registered = frame:RegisterEvent('WHO_LIST_UPDATE')
+    frame:SetScript('OnEvent', function(_, event, ...)
+      tester:DebugMessage('Got event ' .. event)
+      if event ~= 'WHO_LIST_UPDATE' then return end
+      local numWhos, totalNumWhos = C_FriendList.GetNumWhoResults()
+      assert(numWhos > 0)
+      assert(totalNumWhos > 0)
+      frame:UnregisterEvent('WHO_LIST_UPDATE')
+      tester:ReportTestResult(test_idx, true)
+    end)
+    tester:DebugMessage('Sending who 0-500')
+    C_FriendList.SendWho('0-500')
+  end
+  tester:DebugMessage('Sending quiet who 0-10')
+  lib:Who('0-10', sendWho)
+end
+
 --
 -- Slash command
 --
@@ -51,6 +73,9 @@ SlashCmdList['WHOLIB_TEST'] = function(msg)
                   unitTest_Tester_ShouldReportTestResults)
   tester:PushTest('functionalTest_Who_ShouldReturnResults',
                   functionalTest_Who_ShouldReturnResults)
+  tester:PushTest(
+    'functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery',
+    functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery)
   tester:StartTest()
 end
 
@@ -67,12 +92,20 @@ function tester:StartTest()
   lib.RegisterCallback(self, 'WHOLIB_READY', function(...)
     print('Please click to continue the tests.')
   end)
-  for i, test in pairs(self.tests) do test.func(i) end
+  if #self.tests == 0 then
+    self:FinalizeTest()
+  else
+    self.tests[1].func(1)
+  end
 end
 
 function tester:ReportTestResult(idx, result)
   self.results[idx] = result
-  if #self.results == #self.tests then self:FinalizeTest() end
+  if #self.results == #self.tests then
+    self:FinalizeTest()
+  else
+    self.tests[idx + 1].func(idx + 1)
+  end
 end
 
 function tester:FinalizeTest()
@@ -88,4 +121,23 @@ function tester:FinalizeTest()
   end
   print(string.format('Total %d/%d tests passed.', passed, #self.tests))
   self.tests, self.results = {}, {}
+end
+
+function tester:GetAFrame()
+  if not tester.frame then tester.frame = CreateFrame('Frame') end
+  return tester.frame
+end
+
+---Prints test message in special color.
+---
+---To trace a lot of asynchornous test operations, we may need to print some
+---messages. It would be better to print these messages in special color so
+---that we can easier to distinguish them from other messages.
+---@param msg string The message to shown.
+function tester:DebugMessage(msg)
+  if not lib.GetWhoLibDebug() then
+    return
+  end
+  local colorCode = '000088ff'
+  print('\124c' .. colorCode .. msg .. '\124r')
 end
