@@ -69,13 +69,19 @@ end
 
 SLASH_WHOLIB_TEST1 = '/wholib-test'
 SlashCmdList['WHOLIB_TEST'] = function(msg)
-  tester:PushTest('unitTest_Tester_ShouldReportTestResults',
-                  unitTest_Tester_ShouldReportTestResults)
-  tester:PushTest('functionalTest_Who_ShouldReturnResults',
-                  functionalTest_Who_ShouldReturnResults)
-  tester:PushTest(
-    'functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery',
-    functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery)
+  local test_list = {
+    unitTest_Tester_ShouldReportTestResults =
+    unitTest_Tester_ShouldReportTestResults,
+    functionalTest_Who_ShouldReturnResults =
+    functionalTest_Who_ShouldReturnResults,
+    functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery =
+    functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery,
+  }
+  for name, func in pairs(test_list) do
+    if not msg or string.match(name, msg) then
+      tester:PushTest(name, func)
+    end
+  end
   tester:StartTest()
 end
 
