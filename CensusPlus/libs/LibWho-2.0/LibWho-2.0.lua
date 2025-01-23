@@ -654,7 +654,7 @@ end                                                              -- for
 ---@param origin? Enum.SocialWhoOrigin
 function lib.hook.SendWho(self, msg, origin, ...)
   if lib:state() == SYSTEM_STATE.INSTANT then
-    lib:InvokeSendWhoAPI(msg, origin)
+    lib:invokeSendWhoAPI(msg, origin)
   else
     lib:AskWho({queue = self.WHOLIB_QUEUE_USER, query = msg, callback = NOP})
   end
@@ -665,7 +665,7 @@ end
 ---All invocation to `lib.hooked.SendWho` should call this function instead.
 ---@param query string
 ---@param origin? Enum.SocialWhoOrigin
-function lib:InvokeSendWhoAPI(query, origin)
+function lib:invokeSendWhoAPI(query, origin)
   self.hooked.SendWho(query, origin)
   lastInstantQuery = time()
 end
@@ -843,7 +843,7 @@ local function doQuietQuery(args)
   assert(lib:state() ~= SYSTEM_STATE.COOLING_DOWN)
   lib:startWhoInProgress(args)
   lib.hooked.SetWhoToUi(true)
-  lib:InvokeSendWhoAPI(args.query)
+  lib:invokeSendWhoAPI(args.query)
   lib.whoListUpdater:RegisterEvent('WHO_LIST_UPDATE')
   lib:unregisterFriendsFrameFromWhoListUpdateEvent()
 end
@@ -853,7 +853,7 @@ end
 ---This should come directly from the UI event (usually a player invoked one).
 ---@param args Task
 local function doInstantQuery(args)
-  lib:InvokeSendWhoAPI(args.query)
+  lib:invokeSendWhoAPI(args.query)
   tremove(lib.Queue[args.queue])
 end
 
