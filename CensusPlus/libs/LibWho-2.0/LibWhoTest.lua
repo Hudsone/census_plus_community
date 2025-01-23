@@ -83,8 +83,17 @@ end
 -- Tester functions
 --
 
+local sPassed = '\124c0000FF00PASSED\124r'
+local sFailed = '\124c00FF0000FAILED\124r'
+
 function tester:PushTest(name, func)
-  tinsert(self.tests, {name = name, func = func})
+  tinsert(self.tests, {
+    name = name,
+    func = function(idx)
+      print('\124c00AAAA00Start test ' .. tostring(idx) .. '\124r')
+      func(idx)
+    end
+  })
 end
 
 function tester:StartTest()
@@ -100,6 +109,8 @@ function tester:StartTest()
 end
 
 function tester:ReportTestResult(idx, result)
+  local sResult = result and sPassed or sFailed
+  print('\124c00AAAA00Test ' .. tostring(idx) .. '\124r ' .. sResult)
   self.results[idx] = result
   if #self.results == #self.tests then
     self:FinalizeTest()
@@ -110,8 +121,6 @@ end
 
 function tester:FinalizeTest()
   lib.UnregisterCallback(self, 'WHOLIB_READY')
-  local sPassed = '\124c0000FF00PASSED\124r'
-  local sFailed = '\124c00FF0000FAILED\124r'
   print('Test results:')
   local passed = 0
   for i, result in pairs(self.results) do
