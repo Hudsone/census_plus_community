@@ -43,21 +43,38 @@ end
 
 local function functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery(
     test_idx)
-  local function sendWho()
+  local player_name = UnitName("player")
+  assert(lib.setWhoToUiState == false, 'This test requires WhoToUi to be false first.')
+  ---Callback.
+  ---
+  ---We invoke a normal `C_FriendList.SendWho` in the callback to perform a
+  ---consecutive call, this call cannot get the response due to the server
+  ---throttling, so that it should be queued and get the result after the
+  ---throttling is done.
+  ---
+  ---We also test the API call to be responded with the CHAT_MSG_SYSTEM event.
+  ---@param query string
+  ---@param results WhoInfo[]
+  local function sendWho(query, results)
+    assert(#results == 0)
+    assert(query == '0-10')
     tester:DebugMessage('Quiet who 0-10 done')
     local frame = tester:GetAFrame()
-    local registered = frame:RegisterEvent('WHO_LIST_UPDATE')
+    frame:RegisterEvent('WHO_LIST_UPDATE')
+    frame:RegisterEvent('CHAT_MSG_SYSTEM')
     frame:SetScript('OnEvent', function(_, event, ...)
       tester:DebugMessage('Got event ' .. event)
-      if event ~= 'WHO_LIST_UPDATE' then return end
+      assert(event ~= 'WHO_LIST_UPDATE', 'The SetWhoToUi is not restored.')
+      if event ~= 'CHAT_MSG_SYSTEM' then return end
       local numWhos, totalNumWhos = C_FriendList.GetNumWhoResults()
-      assert(numWhos > 0)
-      assert(totalNumWhos > 0)
+      assert(numWhos == 1)
+      assert(totalNumWhos == 1)
       frame:UnregisterEvent('WHO_LIST_UPDATE')
+      frame:UnregisterEvent('CHAT_MSG_SYSTEM')
       tester:ReportTestResult(test_idx, true)
     end)
-    tester:DebugMessage('Sending who 0-500')
-    C_FriendList.SendWho('0-500')
+    tester:DebugMessage('Sending who ' .. player_name)
+    C_FriendList.SendWho(player_name)
   end
   tester:DebugMessage('Sending quiet who 0-10')
   lib:Who('0-10', sendWho)
@@ -67,6 +84,7 @@ end
 -- Slash command
 --
 
+-- You can add a filter after the command. E.g., /wholib-test ReportTest
 SLASH_WHOLIB_TEST1 = '/wholib-test'
 SlashCmdList['WHOLIB_TEST'] = function(msg)
   local test_list = {

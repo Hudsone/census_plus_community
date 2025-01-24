@@ -94,12 +94,14 @@ local function Initialize()
   lib.CacheQueue = {}
   ---Reacts to SetWhoToUi() in the hooked API. This variable always represent
   ---the value set by the call of C_FriendList.SetWhoToUi().
-  lib.SetWhoToUIState = false
+  lib.setWhoToUiState = false
   lib.friendsFrameEventRegistered, _ = FriendsFrame:IsEventRegistered(
     'WHO_LIST_UPDATE')
+  ---@type function | nil This function is set by the query invoker, which reacts to the event received.
+  lib.whoListUpdateCallback = nil
 
-  lib.MinInterval = 2.5
-  lib.MaxInterval = 10
+  lib.MinInterval = 25
+  lib.MaxInterval = 40
 
   ---
   --- locale
@@ -344,7 +346,7 @@ function lib:AllQueuesEmpty()
   return queueCount == 0
 end
 
-local queryInterval = 5
+local queryInterval = 25
 
 function lib:GetQueryInterval() return queryInterval end
 
@@ -400,9 +402,18 @@ function lib:AskWho(args)
   else
     tinsert(self.Queue[args.queue], args)
   end
-  dbg('[' .. args.queue .. '] added "' .. args.query .. '", queues=' ..
-    #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3])
+  dbg(
+    '[' .. args.queue .. '] added',
+    '"' .. args.query .. '",',
+    'queues=' .. self:debugQueueString()
+  )
   self:TriggerEvent('WHOLIB_QUERY_ADDED')
+end
+
+---Shows the debug queue element counts.
+---@return string
+function lib:debugQueueString()
+  return #self.Queue[1] .. '/' .. #self.Queue[2] .. '/' .. #self.Queue[3]
 end
 
 function lib:ReturnUserInfo(name)
@@ -653,6 +664,7 @@ end                                                              -- for
 ---@param msg string The query string.
 ---@param origin? Enum.SocialWhoOrigin
 function lib.hook.SendWho(self, msg, origin, ...)
+  dbg('SendWho API adapter invoked with:', msg, origin)
   if lib:state() == SYSTEM_STATE.INSTANT then
     lib:invokeSendWhoAPI(msg, origin)
   else
@@ -685,7 +697,8 @@ hooksecurefunc(FriendsFrame, 'UnregisterAllEvents',
                function(_, event) lib:unsetFriendsFrameEventBit(event) end);
 
 function lib.hook.SetWhoToUi(self, state)
-  lib.SetWhoToUIState = state
+  dbg('SetWhoToUi adapter invoked with:', state)
+  lib.setWhoToUiState = state
   lib:updateSetWhoToUi()
 end
 
@@ -706,13 +719,35 @@ function lib:WHO_LIST_UPDATE()
   --    WhoList_Update()
   --    FriendsFrame_Update()
   --  end
+  self.whoListUpdateCallback()
+end
 
-  lib:restoreFriendsFrameRegistery()
-  lib.whoListUpdater:UnregisterEvent('WHO_LIST_UPDATE')
-  lib:ProcessWhoResults(lib.Args)
-  lib:updateSetWhoToUi()
-  lib:endWhoInProgress()
-  lib:startCoolDown()
+function lib:CHAT_MSG_SYSTEM(
+    text,
+    playerName,
+    languageName,
+    channelName,
+    playerName2,
+    specialFlags,
+    zoneChannelID,
+    channelIndex,
+    channelBaseName,
+    languageID,
+    lineID,
+    guid,
+    bnSenderID,
+    isMobile,
+    isSubtitle,
+    hideSenderInLetterbox,
+    supressRaidIcons)
+  dbg('Trying to match:', text)
+  -- There are a lot of messages which can come from this event. We could only
+  -- take best effort to match the text that we want to recognize.
+  -- Something as: "[Ward]: Level 80 Kul Tiran Warrior <Lion Gate-Blackhand> - Dornogal"
+  if string.match(text, '%[.+%].*%-') and playerName == '' then
+    dbg('WHO_LIST_UPDATE by CHAT_MSG_SYSTEM: ', text)
+    self.whoListUpdateCallback()
+  end
 end
 
 ---Marks the start of the Who request progress.
@@ -725,7 +760,6 @@ end
 ---Ends the Who request progress.
 function lib:endWhoInProgress()
   self.WhoInProgress = false
-  tremove(lib.Queue[self.Args.queue], 1)
   self.Args = nil
 end
 
@@ -766,8 +800,9 @@ function lib:updateSetWhoToUi()
   local state = self:state()
   -- If we are waiting for the response, it means we have committed a
   -- `SendWho`, and we should not change the state.
+  dbg('Updating SetWhoToUi:', state, self.setWhoToUiState)
   if state ~= SYSTEM_STATE.WAITING_FOR_RESPONSE then
-    self.hooked.SetWhoToUi(self.SetWhoToUIState)
+    self.hooked.SetWhoToUi(self.setWhoToUiState)
   end
 end
 
@@ -798,8 +833,8 @@ function lib:cancelRegisterWhoListUpdateOnQuietQuery(event)
   if event ~= 'WHO_LIST_UPDATE' then return end
   if self:state() == SYSTEM_STATE.WAITING_FOR_RESPONSE then
     FriendsFrame:UnregisterEvent(event)
-    self.friendsFrameEventRegistered = true
   end
+  self.friendsFrameEventRegistered = true
 end
 
 ---Unsets the bit of registering the WHO_LIST_UPDATE event.
@@ -829,6 +864,17 @@ function lib:restoreFriendsFrameRegistery()
   end
 end
 
+---Restores the temporary settings from a quiet query.
+---
+---This function cleans up the temporary settings that quiet query performed
+---to reduce the inteference to the user.
+local function fixQuietQueryChanges()
+  lib:restoreFriendsFrameRegistery()
+  lib.whoListUpdater:UnregisterAllEvents()
+  lib:endWhoInProgress()
+  lib:updateSetWhoToUi()
+end
+
 ---Makes a quiet who query.
 ---
 ---A quiet who query is a query that is not shown in the UI. It tried the best
@@ -838,6 +884,10 @@ end
 ---because the result usually exceeds 4. To be easier process, we always use
 ---SetWhoToUi(true) to make it consistant. Therefore, we need to set this bit on
 ---and restore it after the SendWho is done.
+---
+---This function is supposed to be reentrant, which means when we're waiting for
+---the callback, we allow the query to be request again. in order to test if the
+---throttled status has expired.
 ---@param args Task The task to query.
 local function doQuietQuery(args)
   assert(lib:state() ~= SYSTEM_STATE.COOLING_DOWN)
@@ -846,6 +896,13 @@ local function doQuietQuery(args)
   lib:invokeSendWhoAPI(args.query)
   lib.whoListUpdater:RegisterEvent('WHO_LIST_UPDATE')
   lib:unregisterFriendsFrameFromWhoListUpdateEvent()
+  lib.whoListUpdateCallback = function()
+    lib:ProcessWhoResults(lib.Args)
+    tremove(lib.Queue[lib.Args.queue], 1)
+    dbg('WhoList updated, queues=', lib:debugQueueString())
+    fixQuietQueryChanges()
+    lib:startCoolDown()
+  end
 end
 
 ---Makes an instant query.
@@ -853,8 +910,40 @@ end
 ---This should come directly from the UI event (usually a player invoked one).
 ---@param args Task
 local function doInstantQuery(args)
+  assert(lib:state() == SYSTEM_STATE.INSTANT)
+  fixQuietQueryChanges()
   lib:invokeSendWhoAPI(args.query)
   tremove(lib.Queue[args.queue])
+  dbg('Instant query, queues=', lib:debugQueueString())
+  lib:startCoolDown()
+end
+
+---Makes a query simulating an API call.
+---
+---This function is supposed to be reentrant, which means when we're waiting for
+---the callback, we allow the query to be request again. in order to test if the
+---throttled status has expired.
+---
+---Since it's also possible the previous query is a Quiet one, which means we
+---need to restore the SetWhoToUi state here.
+---@param args Task
+local function doApiQuery(args)
+  assert(lib:state() ~= SYSTEM_STATE.COOLING_DOWN)
+  fixQuietQueryChanges()
+  lib:startWhoInProgress(args)
+  lib:invokeSendWhoAPI(args.query)
+  lib.whoListUpdater:RegisterEvent('WHO_LIST_UPDATE')
+  -- Since doing API query comes from the player or other addons that are not
+  -- controlled by us, the SetWhoToUI can be changed any time. It's also okay
+  -- to change the event listened since we have hooked the SetWhoToUi function.
+  -- However, it's easier to just listen them all.
+  lib.whoListUpdater:RegisterEvent('CHAT_MSG_SYSTEM')
+  lib.whoListUpdateCallback = function()
+    tremove(lib.Queue[lib.Args.queue], 1)
+    dbg('WhoList updated, queues=', lib:debugQueueString())
+    fixQuietQueryChanges()
+    lib:startCoolDown()
+  end
 end
 
 ---Invoked when the hardware event is triggered.
@@ -874,8 +963,7 @@ local function hardwareEventTriggered()
     if state == SYSTEM_STATE.INSTANT then
       doInstantQuery(queue[1])
     else
-      -- To be designed.
-      doQuietQuery(queue[1])
+      doApiQuery(queue[1])
     end
   else
     doQuietQuery(queue[1])
