@@ -17,6 +17,7 @@
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 libs\LibSimpleTester\LibSimpleTester.lua
+libs\LibEventChain\LibEventChain.lua
 libs\LibWho-2.0\LibWho-2.0.lua
 libs\LibWho-2.0\LibWhoTest.lua
 libs\LibRealmID\LibRealmID.lua
