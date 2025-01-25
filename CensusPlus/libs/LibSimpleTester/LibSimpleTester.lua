@@ -135,6 +135,9 @@ end
 ---@param idx integer Should be passed as what it
 ---@param result any
 function tester:ReportTestResult(idx, result)
+  if result == nil then
+    result = false
+  end
   local sResult = result and sPassed or sFailed
   print('\124c00AAAA00Test ' .. tostring(idx) .. '\124r ' .. sResult)
   self.results[idx] = result
