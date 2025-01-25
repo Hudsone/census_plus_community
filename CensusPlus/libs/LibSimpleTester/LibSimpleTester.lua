@@ -111,7 +111,7 @@ function tester:PushTest(name, func)
   tinsert(self.tests, {
     name = name,
     func = function(idx)
-      print('\124c00AAAA00Start test ' .. tostring(idx) .. '\124r')
+      print('\124c00AAAA00Start test ' .. tostring(idx) .. '\124r', name)
       func(function(passed)
         tester:ReportTestResult(idx, passed)
       end)
@@ -144,7 +144,7 @@ function tester:ReportTestResult(idx, result)
   if #self.results == #self.tests then
     self:FinalizeTest()
   else
-    self.tests[idx + 1].func(idx + 1)
+    C_Timer.After(0, function() self.tests[idx + 1].func(idx + 1) end)
   end
 end
 
