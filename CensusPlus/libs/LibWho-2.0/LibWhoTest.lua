@@ -5,11 +5,13 @@
     This file contains the tests that can be run to verify the functionality of WhoLib.
 ]]
 
+local eventchain = LibStub('LibEventChain')
 local tester = LibStub('LibSimpleTester')
 local lib = LibStub('LibWho-2.0')
 if IntellisenseTrick_ExposeGlobal then
   lib = LibWho
   tester = LibSimpleTester
+  eventchain = LibEventChain
 end
 
 --
@@ -26,42 +28,36 @@ end
 
 local function functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQuietQuery(
     reporter)
-  local player_name = UnitName('player')
-  assert(lib.setWhoToUiState == false,
-         'This test requires WhoToUi to be false first.')
-  ---Callback.
-  ---
   ---We invoke a normal `C_FriendList.SendWho` in the callback to perform a
   ---consecutive call, this call cannot get the response due to the server
   ---throttling, so that it should be queued and get the result after the
   ---throttling is done.
   ---
   ---We also test the API call to be responded with the CHAT_MSG_SYSTEM event.
-  ---@param query string
-  ---@param results WhoInfo[]
-  local function sendWho(query, results)
+  assert(lib.setWhoToUiState == false,
+         'This test requires WhoToUi to be false first.')
+  tester:DebugMessage('Sending quiet who 0-0')
+  local cFriendListSendWho = eventchain:CreateCallbackChain(function(callback)
+    lib:Who('0-0', callback)
+  end):NextCallback(function(callback, query, results)
     assert(#results == 0)
-    assert(query == '0-10')
-    tester:DebugMessage('Quiet who 0-10 done')
-    local frame = tester:GetAFrame()
-    frame:RegisterEvent('WHO_LIST_UPDATE')
-    frame:RegisterEvent('CHAT_MSG_SYSTEM')
-    frame:SetScript('OnEvent', function(_, event, ...)
-      tester:DebugMessage('Got event ' .. event)
-      assert(event ~= 'WHO_LIST_UPDATE', 'The SetWhoToUi is not restored.')
-      if event ~= 'CHAT_MSG_SYSTEM' then return end
-      local numWhos, totalNumWhos = C_FriendList.GetNumWhoResults()
-      assert(numWhos == 1)
-      assert(totalNumWhos == 1)
-      frame:UnregisterEvent('WHO_LIST_UPDATE')
-      frame:UnregisterEvent('CHAT_MSG_SYSTEM')
-      reporter(true)
-    end)
+    assert(query == '0-0')
+    callback()
+    tester:DebugMessage('Quiet who 0-0 done')
+    local player_name = UnitName('player')
     tester:DebugMessage('Sending who ' .. player_name)
     C_FriendList.SendWho(player_name)
-  end
-  tester:DebugMessage('Sending quiet who 0-10')
-  lib:Who('0-10', sendWho)
+  end)
+  local watchWhoList = cFriendListSendWho:Next('WHO_LIST_UPDATE', function(...)
+    assert(false, "SetWhoToUi should be restored and this shouldn't be called.")
+  end)
+  cFriendListSendWho:Next('CHAT_MSG_SYSTEM', function(...)
+    eventchain:Cancel(watchWhoList)
+    local numWhos, totalNumWhos = C_FriendList.GetNumWhoResults()
+    assert(numWhos == 1)
+    assert(totalNumWhos == 1)
+    reporter(true)
+  end)
 end
 
 --
