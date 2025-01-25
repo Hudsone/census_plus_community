@@ -28,7 +28,7 @@ local function functionalTest_C_FriendList_SendWho_ShouldGetQueuedIfFollowingAQu
     reporter)
   local player_name = UnitName('player')
   assert(lib.setWhoToUiState == false,
-    'This test requires WhoToUi to be false first.')
+         'This test requires WhoToUi to be false first.')
   ---Callback.
   ---
   ---We invoke a normal `C_FriendList.SendWho` in the callback to perform a
