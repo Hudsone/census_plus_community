@@ -36,27 +36,24 @@ end
 
 local locals = {}
 
----@class EventChain The event chain.
+---@class ChainNode Works as the superclass of EventChain and CallbackChain.
 ---@field Next function Creates the EventChain which succeeds this one.
 ---@field NextCallback function Creates the CallbackChain which succeeds this one.
----@field turnOn function Turns on the this EventChain.
+---@field turnOn function Turns on the this ChainNode.
+---@field callback function The callback. Works differently between EventChain and CallbackChain.
+---@field next ChainNode[] The next ChainNodes.
+
+---@class EventChain: ChainNode The event chain.
 ---@field event string The event to listen.
 ---@field callback function The callback, which all event payloads will be passed to it (the parameters after the event name).
----@field regardTheCallbackReturn boolean `true` to launch the next event chain only when the callback returns true. `false` to chain events immediately when the specified event was triggered.
----@field next EventChain[] The next EventChains.
 
----@class CallbackChain The callback chain.
----@field Next function Creates the EventChain which succeeds this one.
----@field NextCallback function Creates the CallbackChain which succeeds this one.
----@field turnOn function Turns on the this CallbackChain.
+---@class CallbackChain: ChainNode The callback chain.
 ---@field callback function The callback, which all event payloads will be passed to it (the parameters after the event name).
----@field next EventChain[] The next EventChains.
 
 ---Creates an EventChain that executes the callback on the given event.
 ---@param event string The event name.
 ---@param callback function The callback, which all event payloads will be passed to it (the parameters after the event name).
 ---@param regardTheCallbackReturn? boolean `true` to launch the next event chain only when the callback returns true. `false` to chain events immediately when the specified event was triggered.
----@return EventChain eventChain The event chain.
 function lib:CreateEventChain(event, callback, regardTheCallbackReturn)
   local chain = locals:createEventChain(event, callback, regardTheCallbackReturn)
   chain:turnOn()
