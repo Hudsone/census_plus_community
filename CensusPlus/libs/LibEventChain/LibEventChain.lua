@@ -118,7 +118,7 @@ function locals:freeFrame(frame)
 end
 
 ---Creates an EventChain after this one.
----@param self EventChain|CallbackChain Depends on which chain to attach.
+---@param self ChainNode Depends on which chain to attach.
 ---@param nextEvent string The event name.
 ---@param nextCallback function The callback, which all event payloads will be passed to it (the parameters after the event name).
 ---@param nextRegardTheCallbackReturn boolean `true` to launch the next event chain only when the callback returns true. `false` to chain events immediately when the specified event was triggered.
@@ -135,7 +135,7 @@ local function createNext(
 end
 
 ---Creates a CallbackChain after this one.
----@param self EventChain|CallbackChain Depends on which chain to attach.
+---@param self ChainNode Depends on which chain to attach.
 ---@param nextCallback function The callback that is going to be called when the current one is done.
 local function createNextCallback(self, nextCallback)
   local nextChain = locals:createCallbackChain(nextCallback)
