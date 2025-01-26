@@ -72,6 +72,14 @@ function lib:CreateCallbackChain(callback)
   return chain
 end
 
+---Cancels a Chain action.
+---
+---Invoking this function stopped the ChainNode and all its descendants which haven't been executed.
+---@param chain ChainNode
+function lib:Cancel(chain)
+  locals:cancel(chain)
+end
+
 ---@class FrameResource The frame with used bit.
 ---@field frame Frame The actual WOW frame.
 ---@field available boolean Whether the frame is available.
@@ -179,9 +187,7 @@ function locals:turnOnEventChain(chain)
       if not callbackResults[1] then return end
       possibleParameters = extractPossibleParameters(callbackResults)
     end
-    locals:freeFrame(chain.boundFrame)
-    chain.boundFrame = nil
-    chain.Next = nil -- No longer able to chain new events.
+    locals:cleanUpChainBound(chain)
     for _, nextChain in pairs(chain.next) do
       if possibleParameters then
         nextChain:turnOn(unpack(possibleParameters))
@@ -193,6 +199,18 @@ function locals:turnOnEventChain(chain)
       chain.callback(...)
     end
   end)
+end
+
+---Cleans up the bound frame in a ChainNode.
+---@param chain ChainNode
+function locals:cleanUpChainBound(chain)
+  if chain.boundFrame then
+    locals:freeFrame(chain.boundFrame)
+    chain.boundFrame = nil
+  end
+  -- No longer able to chain new events.
+  chain.Next = nil
+  chain.NextCallback = nil
 end
 
 ---Creates a CallbackChain object.
@@ -211,6 +229,7 @@ function locals:createCallbackChain(callback)
   function chain:turnOn(...)
     self.callback(
       function(...)
+        locals:cleanUpChainBound(self)
         for _, nextChain in pairs(self.next) do
           nextChain:turnOn(...)
         end
@@ -219,6 +238,18 @@ function locals:createCallbackChain(callback)
   end
 
   return chain
+end
+
+---Cancels the Chain.
+---
+---The Chain is disposible and will have unexpected behavior if you performed operation on a cancelled Chain.
+---@param chain ChainNode The Chain root to be cancelled.
+function locals:cancel(chain)
+  locals:cleanUpChainBound(chain)
+  for _, nextChain in pairs(chain.next) do
+    self:cancel(nextChain)
+  end
+  chain.next = {}
 end
 
 --
@@ -304,6 +335,38 @@ local function functionalTest_CreateCallbackChain_MixWithEventChain(reporter)
     end)
 end
 
+local function unitTest_Cancel_Should_CancelAllActionsOfCallbackChains(reporter)
+  local value = 0
+  local chainRoot = lib:CreateCallbackChain(function(callback)
+    value = value + 10
+    C_Timer.After(0.1, function() callback() end)
+  end)
+  chainRoot:NextCallback(function(callback)
+    value = value + 10
+  end)
+  lib:Cancel(chainRoot)
+  C_Timer.After(1, function() reporter(value == 10) end)
+end
+
+local function functionalTest_Cancel_Should_CancelAllActionsOfEventChains(
+    reporter)
+  local cancelChainAndFireEvent
+  local value = 0
+  local chainRoot = lib:CreateEventChain('CHAT_MSG_SYSTEM', function()
+    value = value + 10
+    C_Timer.After(0.1, function() cancelChainAndFireEvent() end)
+  end)
+  chainRoot:Next('CHAT_MSG_SYSTEM', function()
+    value = value + 10
+  end)
+  cancelChainAndFireEvent = function()
+    lib:Cancel(chainRoot)
+    SendChatMessage('not matter', 'DND')
+  end
+  SendChatMessage('not matter', 'DND')
+  C_Timer.After(1, function() reporter(value == 10) end)
+end
+
 SLASH_EVENTCHAIN_TEST1 = '/eventchain-test'
 SlashCmdList['EVENTCHAIN_TEST'] = function(msg)
   local test_list = {
@@ -318,6 +381,10 @@ SlashCmdList['EVENTCHAIN_TEST'] = function(msg)
     unitTest_CreateCallbackChain = unitTest_CreateCallbackChain,
     functionalTest_CreateCallbackChain_MixWithEventChain =
         functionalTest_CreateCallbackChain_MixWithEventChain,
+    unitTest_Cancel_Should_CancelAllActionsOfCallbackChains =
+        unitTest_Cancel_Should_CancelAllActionsOfCallbackChains,
+    functionalTest_Cancel_Should_CancelAllActionsOfEventChains =
+        functionalTest_Cancel_Should_CancelAllActionsOfEventChains,
   }
   tester:PushTestsWithFilter(test_list, msg)
   tester:StartTest()
