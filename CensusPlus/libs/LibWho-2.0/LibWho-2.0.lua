@@ -818,6 +818,13 @@ function lib:state()
   return SYSTEM_STATE.READY
 end
 
+function lib:isQuietQuery()
+  if not self.Args then
+    return false
+  end
+  return self.Args.queue ~= self.WHOLIB_QUEUE_USER
+end
+
 local function extendCooldown()
   queryInterval = queryInterval + 0.5
   queryInterval = math.min(queryInterval, lib.MaxInterval)
@@ -831,7 +838,7 @@ end
 ---@param event string The event to cancel the register.
 function lib:cancelRegisterWhoListUpdateOnQuietQuery(event)
   if event ~= 'WHO_LIST_UPDATE' then return end
-  if self:state() == SYSTEM_STATE.WAITING_FOR_RESPONSE then
+  if self:state() == SYSTEM_STATE.WAITING_FOR_RESPONSE and self:isQuietQuery() then
     FriendsFrame:UnregisterEvent(event)
   end
   self.friendsFrameEventRegistered = true
