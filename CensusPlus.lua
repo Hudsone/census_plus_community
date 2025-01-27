@@ -1292,7 +1292,7 @@ function CensusPlus_Command(param)
       end
     elseif (command == 'wholibdebug') then
       _, jvalend, value = string.find(param, '(%w+)', jcmdend + 1) -- alphanumeric selector used to warn of bad input
-      wholib = wholib or LibStub:GetLibrary('LibWho-2.0', true);
+      wholib = wholib or LibStub:GetLibrary('LibWho-3.0', true);
       wholib:SetWhoLibDebug(value)
     elseif (param == 'debug') then
       if (HortonBug == false) then
@@ -1971,7 +1971,7 @@ if more then x time then dump queues and restart as new start else set below sta
         g_TakeHour = hour;
         g_ResetHour = true;
 
-        wholib = wholib or LibStub:GetLibrary('LibWho-2.0', true);
+        wholib = wholib or LibStub:GetLibrary('LibWho-3.0', true);
       elseif (UnitLevel('player') < MIN_CHARACTER_LEVEL) then
         CensusPlus_Msg('Player is below level 20')
         CensusPlayerOnly = false
@@ -2013,7 +2013,7 @@ if more then x time then dump queues and restart as new start else set below sta
       g_TakeHour = hour;
       g_ResetHour = true;
 
-      wholib = wholib or LibStub:GetLibrary('LibWho-2.0', true);
+      wholib = wholib or LibStub:GetLibrary('LibWho-3.0', true);
       --
       --  Subvert WhoLib
       --
