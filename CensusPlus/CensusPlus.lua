@@ -1026,7 +1026,7 @@ function InitializeExperimental()
 end
 
 function CP_ProcessWhoEvent(query, result)
-  complete = true
+  local complete = (#result < MAX_WHOS_FROM_SERVER)
   if (CPp.IsCensusPlusInProgress ~= true) then
     return
   end
