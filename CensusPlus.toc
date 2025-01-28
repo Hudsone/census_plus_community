@@ -1,6 +1,5 @@
 ## Interface: 110007
-## Version: 8.0.5
-## X-SubVersion: >=WBfA_8.3.0
+## Version: @project-version@
 ## Title: CensusPlus
 ## Notes: This AddOn is licenced under the GNU GPL, see LICENSE for details.
 ## Notes: Collects and displays census information. 
@@ -12,13 +11,10 @@
 ## OptionalDeps: LibStub, CallbackHandler-1.0, LibWho-3.0
 ## SavedVariables: CensusPlus_Database, CensusPlus_CRealms, CensusPlus_Guilds, CensusPlus_JobQueue
 ## SavedVariablesPerCharacter: CensusPlus_PerCharInfo
-## X-Website: http://www.warcraftrealms.com
 
 #@no-lib-strip@
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-libs\LibSimpleTester\src\LibSimpleTester.lua
-libs\LibEventChain\src\LibEventChain.lua
 libs\LibWho-3.0\src\LibWho-3.0.lua
 libs\LibRealmID\LibRealmID.lua
 #@end-no-lib-strip@

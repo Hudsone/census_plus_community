@@ -62,14 +62,24 @@ CPp.TZWarningSent = false;                    -- not used?
 --
 ]]
 
+--[[
 local CensusPlus_Version_Major = '8'; -- changing this number will force a saved data purge
 local CensusPlus_Version_Minor = '0'; -- changing this number will force a saved data purge
 local CensusPlus_Version_Maint = '5';
-local CensusPlus_SubVersion = ' >=WoW.8.3.0';
+]]
+local projectVersion = ('@project-version@'):match('%d+%.%d+%.%d+') or
+    '8.0.6' -- controlled by BigWigsMods Packager.
+local versionNumbers = strsplittable('.', projectVersion)
+local CensusPlus_Version_Major = versionNumbers[1]
+local CensusPlus_Version_Minor = versionNumbers[2]
+local CensusPlus_Version_Maint = versionNumbers[3]
+
+local CensusPlus_SubVersion = ' >=WoW.11.0.7';
 --local CensusPlus_VERSION = "WoD"
 local CensusPlus_VERSION = CensusPlus_Version_Major ..
     '.' .. CensusPlus_Version_Minor .. '.' .. CensusPlus_Version_Maint;
-local CensusPlus_VERSION_FULL = CensusPlus_VERSION .. '.' ..
+local versionSuffix = 'a' -- For alpha / beta / release.
+local CensusPlus_VERSION_FULL = CensusPlus_VERSION .. versionSuffix .. '.' ..
     CensusPlus_SubVersion;
 local CensusPlus_PTR = GetCVar('portal') == 'public-test' and 'PTR'; -- enable true for PTR testing  enable false for live use
 local CensusPlus_MAXBARHEIGHT = 128;                                 -- Length of blue bars
