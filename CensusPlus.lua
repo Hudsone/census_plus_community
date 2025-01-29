@@ -976,8 +976,43 @@ function CensusPlus_ToggleOptions(self) -- referenced by CensusPlus.xml
   --		CensusPlusSetCheckButtonState()
 end
 
+local function initializeRepetitiveFrameItems()
+  local raceCount = 12
+  for i = 1, raceCount do
+    local raceLegend = CreateFrame('Button', 'CensusPlusRaceLegend' .. i,
+      CensusPlus, 'CensusPlusRaceLegendTemplate', i)
+    if i == 1 then
+      raceLegend:SetPoint('TOPLEFT', 20, -256)
+    else
+      raceLegend:SetPoint('LEFT', 'CensusPlusRaceLegend' .. (i - 1), 'RIGHT', 6,
+        0)
+    end
+    local raceBar = CreateFrame('Button', 'CensusPlusRaceBar' .. i, CensusPlus,
+      'CensusPlusRaceBarTemplate', i)
+    raceBar:SetPoint('BOTTOM', raceLegend, 'TOP', 0, 8)
+  end
+  local classCount = 12
+  for i = 1, classCount do
+    local classLegend = CreateFrame('Button', 'CensusPlusClassLegend' .. i,
+      CensusPlus, 'CensusPlusClassLegendTemplate', i)
+    if i == 1 then
+      classLegend:SetPoint('LEFT', 'CensusPlusRaceLegend' .. raceCount, 'RIGHT',
+        24, 0)
+    else
+      classLegend:SetPoint('LEFT', 'CensusPlusClassLegend' .. (i - 1), 'RIGHT', 6,
+        0)
+    end
+    local classBar = CreateFrame('Button', 'CensusPlusClassBar' .. i, CensusPlus,
+      'CensusPlusClassBarTemplate', i)
+    classBar:SetPoint('BOTTOM', classLegend, 'TOP', 0, 8)
+  end
+end
+
 function CensusPlus_OnLoad(self) -- referenced by CensusPlus.xml
-  --print("CensusPlus_OnLoad")	
+  --print("CensusPlus_OnLoad")
+
+  initializeRepetitiveFrameItems()
+
   --[[		-- Update the version number
 	--
 	]]
@@ -3914,6 +3949,32 @@ function VRealmMembership_verifier(realmName)
   end
 end
 
+---Gets the texture name by the race / class ID.
+---@param raceClass string The race / class name (locale aware).
+---@returns string The texture name which can be used in `SetNormalTexture()`.
+local function getIconTexture(raceClass)
+  -- ugly brut force fix..
+  local factionGroup = UnitFactionGroup('player');
+  if ((factionGroup == 'Horde') and (g_RaceClassList[raceClass] == 34)) then
+    g_RaceClassList[raceClass] = 33
+  elseif ((factionGroup == 'Alliance') and (g_RaceClassList[raceClass] == 33)) then
+    g_RaceClassList[raceClass] = 34
+  end
+  -- ugly but gets the job done.. now figure out why and get rid of this
+  local normalTextureName = ''
+  if g_RaceClassList[raceClass] then
+    normalTextureName = 'Interface\\AddOns\\CensusPlus\\Skin\\CensusPlus_' ..
+        g_RaceClassList[raceClass];
+  else
+    if raceClass == CENSUSPLUS_DRACTHYR then
+      normalTextureName = 'interface/icons/ui_dracthyr.blp'
+    elseif raceClass == CENSUSPLUS_EARTHEN then
+      normalTextureName = 'interface/icons/ability_earthen_wideeyedwonder.blp'
+    end
+  end
+  return normalTextureName
+end
+
 --[[	-- Search the character database using the search criteria and update display
 --
   ]]
@@ -4304,16 +4365,8 @@ print("realm change "..current_realm)
     else
       button:Hide();
     end
-    -- ugly brut force fix..
-    local factionGroup = UnitFactionGroup('player');
-    if ((factionGroup == 'Horde') and (g_RaceClassList[race] == 34)) then
-      g_RaceClassList[race] = 33
-    elseif ((factionGroup == 'Alliance') and (g_RaceClassList[race] == 33)) then
-      g_RaceClassList[race] = 34
-    end
-    -- ugly but gets the job done.. now figure out why and get rid of this
-    local normalTextureName = 'Interface\\AddOns\\CensusPlus\\Skin\\CensusPlus_' ..
-        g_RaceClassList[race];
+
+    local normalTextureName = getIconTexture(race)
 
 
     local legendName = 'CensusPlusRaceLegend' .. i;
