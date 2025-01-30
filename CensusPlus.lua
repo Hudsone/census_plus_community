@@ -980,31 +980,61 @@ local function initializeRepetitiveFrameItems()
   local raceCount = 12
   for i = 1, raceCount do
     local raceLegend = CreateFrame('Button', 'CensusPlusRaceLegend' .. i,
-      CensusPlus, 'CensusPlusRaceLegendTemplate', i)
+                                   CensusPlus, 'CensusPlusRaceLegendTemplate', i)
     if i == 1 then
       raceLegend:SetPoint('TOPLEFT', 20, -256)
     else
       raceLegend:SetPoint('LEFT', 'CensusPlusRaceLegend' .. (i - 1), 'RIGHT', 6,
-        0)
+                          0)
     end
     local raceBar = CreateFrame('Button', 'CensusPlusRaceBar' .. i, CensusPlus,
-      'CensusPlusRaceBarTemplate', i)
+                                'CensusPlusRaceBarTemplate', i)
     raceBar:SetPoint('BOTTOM', raceLegend, 'TOP', 0, 8)
   end
   local classCount = 12
   for i = 1, classCount do
     local classLegend = CreateFrame('Button', 'CensusPlusClassLegend' .. i,
-      CensusPlus, 'CensusPlusClassLegendTemplate', i)
+                                    CensusPlus, 'CensusPlusClassLegendTemplate',
+                                    i)
     if i == 1 then
       classLegend:SetPoint('LEFT', 'CensusPlusRaceLegend' .. raceCount, 'RIGHT',
-        24, 0)
+                           24, 0)
     else
       classLegend:SetPoint('LEFT', 'CensusPlusClassLegend' .. (i - 1), 'RIGHT', 6,
-        0)
+                           0)
     end
     local classBar = CreateFrame('Button', 'CensusPlusClassBar' .. i, CensusPlus,
-      'CensusPlusClassBarTemplate', i)
+                                 'CensusPlusClassBarTemplate', i)
     classBar:SetPoint('BOTTOM', classLegend, 'TOP', 0, 8)
+  end
+  local levelCount = 120
+  for i = 1, levelCount do
+    local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, CensusPlus,
+                                 'CensusPlusLevelBarTemplate', i)
+    local levelBarEmpty = CreateFrame('Button', 'CensusPlusLevelBarEmpty' .. i,
+                                      CensusPlus,
+                                      'CensusPlusLevelBarEmptyTemplate', i)
+    if i == 1 then
+      levelBar:SetSize(0, 0)
+      levelBar:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -452)
+      levelBarEmpty:SetSize(0, 0)
+      levelBarEmpty:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -450)
+    elseif i < 20 then
+      levelBar:SetSize(0, 0)
+      levelBar:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBar' .. (i - 1),
+                        'BOTTOMRIGHT', 0, 0)
+      levelBarEmpty:SetSize(0, 0)
+      levelBarEmpty:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBarEmpty' .. (i - 1),
+                             'BOTTOMRIGHT', 0, 0)
+    elseif i == 20 then
+      levelBar:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -452)
+      levelBarEmpty:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -450)
+    else
+      levelBar:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBar' .. (i - 1),
+                        'BOTTOMRIGHT', 4, 0)
+      levelBarEmpty:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBarEmpty' .. (i - 1),
+                             'BOTTOMRIGHT', 4, 0)
+    end
   end
 end
 
