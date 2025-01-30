@@ -2684,29 +2684,12 @@ function CensusPlus_InitializeVariables()
     CensusPlus_PerCharInfo['Version'] = {};
   end
 
-  --[[	   V 6.0.1 to 6.1.0 database purge
---]]
-  --print("anyone home?")
   if (CensusPlus_Database['Info']['Version'] ~= nil) then
     g_InterfaceVersion = CensusPlus_Database['Info']['Version']
     -- keep left V.v to compare with V.v in code
     local _, cpsubset = string.find(g_InterfaceVersion, '%.')
     local _, cpsubset2 = string.find(g_InterfaceVersion, '%.', cpsubset + 1)
     g_InterfaceVersion = string.sub(g_InterfaceVersion, 1, cpsubset2 - 1)
-    --		print("found interface version "..g_InterfaceVersion)
-    local _, cpsubset = string.find(CensusPlus_VERSION, '%.')
-    local _, cpsubset2 = string.find(CensusPlus_VERSION, '%.', cpsubset + 1)
-    local CensusPlus_Version_subset = string.sub(CensusPlus_VERSION, 1,
-                                                 cpsubset2 - 1)
-    --		print("coded interface version "..CensusPlus_Version_subset)
-    if (g_InterfaceVersion ~= CensusPlus_Version_subset) then
-      CensusPlus_Database['Info'] = {};
-      CensusPlus_PerCharInfo = nil
-      CensusPlus_PerCharInfo = {}
-      CensusPlus_PerCharInfo['Version'] = CensusPlus_VERSION
-      CensusPlus_DoPurge();
-      CensusPlus_Msg(CENSUSPLUS_OBSOLETEDATAFORMATTEXT);
-    end
   end
   CPp.FirstLoad = true
 
