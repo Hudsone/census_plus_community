@@ -527,7 +527,8 @@ function CensusPlus_GetFactionRaces(faction)
       CENSUSPLUS_NIGHTBORNE,
       CENSUSPLUS_MAGHAR,
       CENSUSPLUS_ZANDALARI,
-      CENSUSPLUS_VULPERA
+      CENSUSPLUS_VULPERA,
+      CENSUSPLUS_DRACTHYR,
     };
   elseif (faction == CENSUSPlus_ALLIANCE) then
     ret = {
@@ -542,7 +543,8 @@ function CensusPlus_GetFactionRaces(faction)
       CENSUSPLUS_VOIDELF,
       CENSUSPLUS_DARKIRON,
       CENSUSPLUS_KULTIRAN,
-      CENSUSPLUS_MECHAGNOME
+      CENSUSPLUS_MECHAGNOME,
+      CENSUSPLUS_DRACTHYR,
     };
   end
   return ret;
@@ -976,38 +978,58 @@ function CensusPlus_ToggleOptions(self) -- referenced by CensusPlus.xml
   --		CensusPlusSetCheckButtonState()
 end
 
-local function initializeRepetitiveFrameItems()
-  local raceCount = 12
+---Creates Race bars / legends.
+---@param raceCount integer The total race count.
+---@param legendWidth integer The legend width.
+---@param marginX integer The x margin between each legend.
+---@param anchorX number `x` of the TOPLEFT anchor.
+---@param anchorY number `y` of the TOPLEFT anchor.
+local function createRaceFrames(raceCount, legendWidth, marginX, anchorX, anchorY)
+  local topLeftCorner = CensusPlus:CreateTexture(nil, 'BORDER')
+  topLeftCorner:SetTexture('Interface\\Dialogframe\\Dialogframe-Corners')
+  topLeftCorner:SetTexCoord(0, 0.5, 0, 0.5)
+  topLeftCorner:SetSize(32, 32)
+  topLeftCorner:SetPoint('TOPLEFT', -5, 7)
   for i = 1, raceCount do
     local raceLegend = CreateFrame('Button', 'CensusPlusRaceLegend' .. i,
                                    CensusPlus, 'CensusPlusRaceLegendTemplate', i)
-    if i == 1 then
-      raceLegend:SetPoint('TOPLEFT', 20, -256)
-    else
-      raceLegend:SetPoint('LEFT', 'CensusPlusRaceLegend' .. (i - 1), 'RIGHT', 6,
-                          0)
-    end
+    raceLegend:SetPoint('TOPLEFT',
+                        anchorX + (i - 1) * (marginX + legendWidth),
+                        anchorY)
     local raceBar = CreateFrame('Button', 'CensusPlusRaceBar' .. i, CensusPlus,
                                 'CensusPlusRaceBarTemplate', i)
     raceBar:SetPoint('BOTTOM', raceLegend, 'TOP', 0, 8)
   end
-  local classCount = 12
+end
+
+---Creates Class bars / legends.
+---@param classCount integer The total class count.
+---@param legendWidth integer The legend width.
+---@param marginX integer The x margin between each legend.
+---@param anchorX number `x` of the TOPLEFT anchor.
+---@param anchorY number `y` of the TOPLEFT anchor.
+local function createClassFrames(
+    classCount,
+    legendWidth,
+    marginX,
+    anchorX,
+    anchorY)
   for i = 1, classCount do
     local classLegend = CreateFrame('Button', 'CensusPlusClassLegend' .. i,
                                     CensusPlus, 'CensusPlusClassLegendTemplate',
                                     i)
-    if i == 1 then
-      classLegend:SetPoint('LEFT', 'CensusPlusRaceLegend' .. raceCount, 'RIGHT',
-                           24, 0)
-    else
-      classLegend:SetPoint('LEFT', 'CensusPlusClassLegend' .. (i - 1), 'RIGHT', 6,
-                           0)
-    end
+    classLegend:SetPoint('TOPLEFT',
+                         anchorX + (i - 1) * (marginX + legendWidth),
+                         anchorY)
     local classBar = CreateFrame('Button', 'CensusPlusClassBar' .. i, CensusPlus,
                                  'CensusPlusClassBarTemplate', i)
     classBar:SetPoint('BOTTOM', classLegend, 'TOP', 0, 8)
   end
-  local levelCount = 120
+end
+
+---Creates level bars.
+---@param levelCount integer The total levels.
+local function createLevelFrames(levelCount)
   for i = 1, levelCount do
     local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, CensusPlus,
                                  'CensusPlusLevelBarTemplate', i)
@@ -1036,6 +1058,20 @@ local function initializeRepetitiveFrameItems()
                              'BOTTOMRIGHT', 4, 0)
     end
   end
+end
+
+local function initializeRepetitiveFrameItems()
+  local raceCount = 12
+  local legendWidth = 32
+  local marginX = 6
+  local raceAnchorX, raceAnchorY = 20, -256
+  createRaceFrames(raceCount, legendWidth, marginX, raceAnchorX, raceAnchorY)
+  local classAnchorX = 24 + raceAnchorX + raceCount * legendWidth +
+      (raceCount - 1) * marginX
+  local classAnchorY = raceAnchorY
+  local classCount = 12
+  createClassFrames(classCount, legendWidth, marginX, classAnchorX, classAnchorY)
+  createLevelFrames(MAX_CHARACTER_LEVEL)
 end
 
 function CensusPlus_OnLoad(self) -- referenced by CensusPlus.xml
@@ -4618,22 +4654,6 @@ print("realm change "..current_realm)
         emptyButton:SetHeight(CensusPlus_MAXBARHEIGHT);
         emptyButton:Show();
       end
-    end
-  end
-
-
-  --[[  temp fix for 5.0.4 this fix was needed to block display of non-existant levels until the XP came out. ( and will be needed again on the next XP
-	 and for pre WoD
---]]
-  if (MAX_CHARACTER_LEVEL < LATEST_XPAC_LIMIT) then
-    for i = MAX_CHARACTER_LEVEL + 1, LATEST_XPAC_LIMIT, 1 do
-      local height = 1
-      local buttonName = 'CensusPlusLevelBar' .. i;
-      local buttonEmptyName = 'CensusPlusLevelBarEmpty' .. i;
-      local button = _G[buttonName];
-      local emptyButton = _G[buttonEmptyName];
-      emptyButton:Hide();
-      button:Hide();
     end
   end
 
