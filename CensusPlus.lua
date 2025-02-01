@@ -1021,14 +1021,24 @@ local function createClassFrames(
     marginX,
     anchorX,
     anchorY)
+  local classFrame = CreateFrame('Frame', 'CensusPlusClassFrame', CensusPlus,
+                                 'CensusPlusPanelTemplate')
+  classFrame:SetPoint('TOPLEFT', anchorX, anchorY)
+  classFrame:SetSize(
+    classCount * legendWidth + (classCount - 1) * marginX +
+    CENSUSPLUS_FRAMEPADDING_X * 2,
+    CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
   for i = 1, classCount do
     local classLegend = CreateFrame('Button', 'CensusPlusClassLegend' .. i,
-                                    CensusPlus, 'CensusPlusClassLegendTemplate',
+                                    classFrame, 'CensusPlusClassLegendTemplate',
                                     i)
     classLegend:SetPoint('TOPLEFT',
-                         anchorX + (i - 1) * (marginX + legendWidth),
-                         anchorY)
-    local classBar = CreateFrame('Button', 'CensusPlusClassBar' .. i, CensusPlus,
+                         classFrame,
+                         'BOTTOMLEFT',
+                         CENSUSPLUS_FRAMEPADDING_X +
+                         (i - 1) * (marginX + legendWidth),
+                         -3)
+    local classBar = CreateFrame('Button', 'CensusPlusClassBar' .. i, classFrame,
                                  'CensusPlusClassBarTemplate', i)
     classBar:SetPoint('BOTTOM', classLegend, 'TOP', 0, 8)
   end
@@ -1069,8 +1079,8 @@ local function initializeRepetitiveFrameItems()
   local raceCount = 12
   local legendWidth = 32
   local marginX = 6
-  local raceAnchorX, raceAnchorY = 20, -256
-  createRaceFrames(raceCount, legendWidth, marginX, 13, -113)
+  local raceAnchorX, raceAnchorY = 13, -113
+  createRaceFrames(raceCount, legendWidth, marginX, raceAnchorX, raceAnchorY)
   local classAnchorX = 24 + raceAnchorX + raceCount * legendWidth +
       (raceCount - 1) * marginX
   local classAnchorY = raceAnchorY
