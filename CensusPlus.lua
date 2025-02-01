@@ -985,11 +985,6 @@ end
 ---@param anchorX number `x` of the TOPLEFT anchor.
 ---@param anchorY number `y` of the TOPLEFT anchor.
 local function createRaceFrames(raceCount, legendWidth, marginX, anchorX, anchorY)
-  local topLeftCorner = CensusPlus:CreateTexture(nil, 'BORDER')
-  topLeftCorner:SetTexture('Interface\\Dialogframe\\Dialogframe-Corners')
-  topLeftCorner:SetTexCoord(0, 0.5, 0, 0.5)
-  topLeftCorner:SetSize(32, 32)
-  topLeftCorner:SetPoint('TOPLEFT', -5, 7)
   for i = 1, raceCount do
     local raceLegend = CreateFrame('Button', 'CensusPlusRaceLegend' .. i,
                                    CensusPlus, 'CensusPlusRaceLegendTemplate', i)
@@ -1030,32 +1025,29 @@ end
 ---Creates level bars.
 ---@param levelCount integer The total levels.
 local function createLevelFrames(levelCount)
+  local framePaddingX, framePaddingY = 6, 5
+  local levelFrame = CreateFrame('Frame', 'CensusPlusLevelFrame', CensusPlus,
+                                 'CensusPlusPanelTemplate')
+  levelFrame:SetPoint('TOPLEFT', 13, -316)
+  levelFrame:SetSize(
+    levelCount * 6 + (levelCount - 1) * 4 + framePaddingX * 2,
+    framePaddingY * 2 + 130)
   for i = 1, levelCount do
-    local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, CensusPlus,
+    local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, levelFrame,
                                  'CensusPlusLevelBarTemplate', i)
     local levelBarEmpty = CreateFrame('Button', 'CensusPlusLevelBarEmpty' .. i,
-                                      CensusPlus,
+                                      levelFrame,
                                       'CensusPlusLevelBarEmptyTemplate', i)
-    if i == 1 then
+    if i < 20 then
       levelBar:SetSize(0, 0)
-      levelBar:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -452)
+      levelBar:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT', 0, 0)
       levelBarEmpty:SetSize(0, 0)
-      levelBarEmpty:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -450)
-    elseif i < 20 then
-      levelBar:SetSize(0, 0)
-      levelBar:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBar' .. (i - 1),
-                        'BOTTOMRIGHT', 0, 0)
-      levelBarEmpty:SetSize(0, 0)
-      levelBarEmpty:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBarEmpty' .. (i - 1),
-                             'BOTTOMRIGHT', 0, 0)
-    elseif i == 20 then
-      levelBar:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -452)
-      levelBarEmpty:SetPoint('BOTTOMLEFT', CensusPlus, 'TOPLEFT', 20, -450)
+      levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT', 0, 0)
     else
-      levelBar:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBar' .. (i - 1),
-                        'BOTTOMRIGHT', 4, 0)
-      levelBarEmpty:SetPoint('BOTTOMLEFT', 'CensusPlusLevelBarEmpty' .. (i - 1),
-                             'BOTTOMRIGHT', 4, 0)
+      levelBar:SetPoint('BOTTOMLEFT', levelFrame, 'BOTTOMLEFT',
+                        framePaddingX + (i - 1) * (6 + 4), framePaddingY)
+      levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT',
+                             framePaddingX + (i - 1) * (6 + 4), framePaddingY)
     end
   end
 end
