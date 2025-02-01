@@ -11,7 +11,8 @@
   <Script file="realmlist_US.lua" />
   <Script file="realmlist_EU.lua" />
   <Script file="CensusPlus.lua" />
-  <Frame name="CensusPlusPanelTemplate" virtual="true">
+  <Frame name="CensusPlusPanelTemplate"
+         virtual="true">
     <Layers>
       <Layer level="BORDER">
         <Texture file="Interface\Dialogframe\Dialogframe-Corners">
@@ -20,9 +21,13 @@
                      left="0"
                      bottom=".5"
                      right=".5" />
-          <Size x="32" y="32" />
+          <Size x="32"
+                y="32" />
           <Anchors>
-            <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-5" y="7" />
+            <Anchor point="TOPLEFT"
+                    relativePoint="TOPLEFT"
+                    x="-5"
+                    y="7" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Corners">
@@ -31,9 +36,13 @@
                      left=".5"
                      bottom=".5"
                      right="1" />
-          <Size x="32" y="32" />
+          <Size x="32"
+                y="32" />
           <Anchors>
-            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5" y="7" />
+            <Anchor point="TOPRIGHT"
+                    relativePoint="TOPRIGHT"
+                    x="5"
+                    y="7" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Corners">
@@ -42,9 +51,13 @@
                      left="0"
                      bottom="1"
                      right=".5" />
-          <Size x="32" y="32" />
+          <Size x="32"
+                y="32" />
           <Anchors>
-            <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="-5" y="-7" />
+            <Anchor point="BOTTOMLEFT"
+                    relativePoint="BOTTOMLEFT"
+                    x="-5"
+                    y="-7" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Corners">
@@ -53,40 +66,63 @@
                      left=".5"
                      bottom="1"
                      right="1" />
-          <Size x="32" y="32" />
+          <Size x="32"
+                y="32" />
           <Anchors>
-            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="5" y="-7" />
+            <Anchor point="BOTTOMRIGHT"
+                    relativePoint="BOTTOMRIGHT"
+                    x="5"
+                    y="-7" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Left">
           <!-- Left Outer Border -->
           <!-- <Texture file="Interface\AddOns\CensusPlus\Skin\CensusPlus_Window_UltraLeft" alphaMode="ADD"> -->
-          <Size x="16" y="463" /> <!-- y=[HEIGHT + 14 - 32 * 2 + 1] -->
+          <Size x="16"
+                y="463" />
+          <!-- y=[HEIGHT + 14 - 32 * 2 + 1] -->
           <Anchors>
-            <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="-4" y="-25" />
+            <Anchor point="TOPLEFT"
+                    relativePoint="TOPLEFT"
+                    x="-4"
+                    y="-25" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Right">
           <!-- Right Outer Border -->
-          <Size x="16" y="463" /> <!-- y=[HEIGHT + 14 - 32 * 2 + 1] -->
+          <Size x="16"
+                y="463" />
+          <!-- y=[HEIGHT + 14 - 32 * 2 + 1] -->
           <Anchors>
-            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5" y="-25" />
+            <Anchor point="TOPRIGHT"
+                    relativePoint="TOPRIGHT"
+                    x="5"
+                    y="-25" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Top">
           <!-- Top Outer Border -->
-          <Size x="1196" y="16" /> <!-- x=[WIDTH + 10 - 32 * 2] -->
+          <Size x="1196"
+                y="16" />
+          <!-- x=[WIDTH + 10 - 32 * 2] -->
           <Anchors>
-            <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="27" y="6">
-            </Anchor>
+            <Anchor point="TOPLEFT"
+                    relativePoint="TOPLEFT"
+                    x="27"
+                    y="6" />
           </Anchors>
         </Texture>
         <Texture file="Interface\Dialogframe\Dialogframe-Bot">
           <!-- Bottom Outer Border -->
           <!-- <Texture file="Interface\AddOns\CensusPlus\Skin\CensusPlus_Window_UltraLeft" alphaMode="ADD"> -->
-          <Size x="1196" y="16" /> <!-- x=[WIDTH + 10 - 32 * 2] -->
+          <Size x="1196"
+                y="16" />
+          <!-- x=[WIDTH + 10 - 32 * 2] -->
           <Anchors>
-            <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="27" y="-7" />
+            <Anchor point="BOTTOMLEFT"
+                    relativePoint="BOTTOMLEFT"
+                    x="27"
+                    y="-7" />
           </Anchors>
         </Texture>
       </Layer>
@@ -363,7 +399,8 @@
          enableMouse="true"
          toplevel="true"
          movable="true">
-    <Size x="1250" y="512" />
+    <Size x="1250"
+          y="512" />
     <Anchors>
       <Anchor point="TOPLEFT">
         <Offset>
