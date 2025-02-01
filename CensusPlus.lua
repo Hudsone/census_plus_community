@@ -978,6 +978,8 @@ function CensusPlus_ToggleOptions(self) -- referenced by CensusPlus.xml
   --		CensusPlusSetCheckButtonState()
 end
 
+local CENSUSPLUS_FRAMEPADDING_X, CENSUSPLUS_FRAMEPADDING_Y = 6, 5
+
 ---Creates Race bars / legends.
 ---@param raceCount integer The total race count.
 ---@param legendWidth integer The legend width.
@@ -985,13 +987,23 @@ end
 ---@param anchorX number `x` of the TOPLEFT anchor.
 ---@param anchorY number `y` of the TOPLEFT anchor.
 local function createRaceFrames(raceCount, legendWidth, marginX, anchorX, anchorY)
+  local raceFrame = CreateFrame('Frame', 'CensusPlusRaceFrame', CensusPlus,
+                                'CensusPlusPanelTemplate')
+  raceFrame:SetPoint('TOPLEFT', anchorX, anchorY)
+  raceFrame:SetSize(
+    raceCount * legendWidth + (raceCount - 1) * marginX +
+    CENSUSPLUS_FRAMEPADDING_X * 2,
+    CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
   for i = 1, raceCount do
     local raceLegend = CreateFrame('Button', 'CensusPlusRaceLegend' .. i,
-                                   CensusPlus, 'CensusPlusRaceLegendTemplate', i)
+                                   raceFrame, 'CensusPlusRaceLegendTemplate', i)
     raceLegend:SetPoint('TOPLEFT',
-                        anchorX + (i - 1) * (marginX + legendWidth),
-                        anchorY)
-    local raceBar = CreateFrame('Button', 'CensusPlusRaceBar' .. i, CensusPlus,
+                        raceFrame,
+                        'BOTTOMLEFT',
+                        CENSUSPLUS_FRAMEPADDING_X +
+                        (i - 1) * (marginX + legendWidth),
+                        -3)
+    local raceBar = CreateFrame('Button', 'CensusPlusRaceBar' .. i, raceFrame,
                                 'CensusPlusRaceBarTemplate', i)
     raceBar:SetPoint('BOTTOM', raceLegend, 'TOP', 0, 8)
   end
@@ -1025,13 +1037,12 @@ end
 ---Creates level bars.
 ---@param levelCount integer The total levels.
 local function createLevelFrames(levelCount)
-  local framePaddingX, framePaddingY = 6, 5
   local levelFrame = CreateFrame('Frame', 'CensusPlusLevelFrame', CensusPlus,
                                  'CensusPlusPanelTemplate')
   levelFrame:SetPoint('TOPLEFT', 13, -316)
   levelFrame:SetSize(
-    levelCount * 6 + (levelCount - 1) * 4 + framePaddingX * 2,
-    framePaddingY * 2 + 130)
+    levelCount * 6 + (levelCount - 1) * 4 + CENSUSPLUS_FRAMEPADDING_X * 2,
+    CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
   for i = 1, levelCount do
     local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, levelFrame,
                                  'CensusPlusLevelBarTemplate', i)
@@ -1045,9 +1056,11 @@ local function createLevelFrames(levelCount)
       levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT', 0, 0)
     else
       levelBar:SetPoint('BOTTOMLEFT', levelFrame, 'BOTTOMLEFT',
-                        framePaddingX + (i - 1) * (6 + 4), framePaddingY)
+                        CENSUSPLUS_FRAMEPADDING_X + (i - 1) * (6 + 4),
+                        CENSUSPLUS_FRAMEPADDING_Y)
       levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT',
-                             framePaddingX + (i - 1) * (6 + 4), framePaddingY)
+                             CENSUSPLUS_FRAMEPADDING_X + (i - 1) * (6 + 4),
+                             CENSUSPLUS_FRAMEPADDING_Y)
     end
   end
 end
@@ -1057,7 +1070,7 @@ local function initializeRepetitiveFrameItems()
   local legendWidth = 32
   local marginX = 6
   local raceAnchorX, raceAnchorY = 20, -256
-  createRaceFrames(raceCount, legendWidth, marginX, raceAnchorX, raceAnchorY)
+  createRaceFrames(raceCount, legendWidth, marginX, 13, -113)
   local classAnchorX = 24 + raceAnchorX + raceCount * legendWidth +
       (raceCount - 1) * marginX
   local classAnchorY = raceAnchorY
