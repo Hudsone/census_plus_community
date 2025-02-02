@@ -104,6 +104,7 @@ CENSUSPLUS_PALADIN              = 'Paladin';
 CENSUSPLUS_DEATHKNIGHT          = 'Death Knight';
 CENSUSPLUS_MONK                 = 'Monk';
 CENSUSPLUS_DEMONHUNTER          = 'Demon Hunter';
+CENSUSPLUS_EVOKER               = 'Evoker';
 
 CENSUSPLUS_DWARF                = 'Dwarf';
 CENSUSPLUS_GNOME                = 'Gnome';

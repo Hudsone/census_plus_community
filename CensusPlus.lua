@@ -575,7 +575,8 @@ function CensusPlus_GetFactionClasses(faction)
       CENSUSPLUS_MONK,
       CENSUSPLUS_DRUID,
       CENSUSPLUS_DEMONHUNTER,
-      CENSUSPLUS_DEATHKNIGHT
+      CENSUSPLUS_DEATHKNIGHT,
+      CENSUSPLUS_EVOKER,
     };
   elseif (faction == CENSUSPlus_ALLIANCE) then
     ret = {
@@ -590,7 +591,8 @@ function CensusPlus_GetFactionClasses(faction)
       CENSUSPLUS_MONK,
       CENSUSPLUS_DRUID,
       CENSUSPLUS_DEMONHUNTER,
-      CENSUSPLUS_DEATHKNIGHT
+      CENSUSPLUS_DEATHKNIGHT,
+      CENSUSPLUS_EVOKER,
     };
   end
   return ret;
@@ -908,6 +910,7 @@ local function GetRaceClasses(race)
       CENSUSPLUS_ROGUE,
       CENSUSPLUS_PRIEST,
       CENSUSPLUS_WARLOCK,
+      CENSUSPLUS_EVOKER,
     }
   elseif race == CENSUSPLUS_EARTHEN then
     ret = {
@@ -1154,7 +1157,7 @@ local function initializeRepetitiveFrameItems()
   local classAnchorX = 24 + raceAnchorX + raceCount * legendWidth +
       (raceCount - 1) * marginX
   local classAnchorY = raceAnchorY
-  local classCount = 12
+  local classCount = 13
   createClassFrames(classCount, legendWidth, marginX, classAnchorX, classAnchorY)
   createLevelFrames(MAX_CHARACTER_LEVEL)
   local guildAnchorX = 960
@@ -4106,8 +4109,8 @@ local function getIconTexture(raceClass)
   else
     if raceClass == CENSUSPLUS_DRACTHYR then
       normalTextureName = 'interface/icons/ui_dracthyr.blp'
-    elseif raceClass == CENSUSPLUS_EARTHEN then
-      normalTextureName = 'interface/icons/ability_earthen_wideeyedwonder.blp'
+    elseif raceClass == CENSUSPLUS_EVOKER then
+      normalTextureName = 'interface/icons/classicon_evoker.blp'
     end
   end
   return normalTextureName
@@ -4631,8 +4634,7 @@ print("realm change "..current_realm)
       button:Hide();
     end
 
-    local normalTextureName = 'Interface\\AddOns\\CensusPlus\\Skin\\CensusPlus_' ..
-        g_RaceClassList[class];
+    local normalTextureName = getIconTexture(class)
     local legendName = 'CensusPlusClassLegend' .. i;
     local legend = _G[legendName];
     legend:SetNormalTexture(normalTextureName);
