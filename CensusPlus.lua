@@ -994,6 +994,9 @@ local function createRaceFrames(raceCount, legendWidth, marginX, anchorX, anchor
     raceCount * legendWidth + (raceCount - 1) * marginX +
     CENSUSPLUS_FRAMEPADDING_X * 2,
     CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
+  local title = raceFrame:CreateFontString('CensusPlusRacesTitle', 'ARTWORK', 'GameFontHighlight')
+  title:SetPoint('CENTER', raceFrame, 'TOP', 0, 12)
+  title:SetText(CENSUSPLUS_RACE)
   for i = 1, raceCount do
     local raceLegend = CreateFrame('Button', 'CensusPlusRaceLegend' .. i,
                                    raceFrame, 'CensusPlusRaceLegendTemplate', i)
@@ -1028,6 +1031,9 @@ local function createClassFrames(
     classCount * legendWidth + (classCount - 1) * marginX +
     CENSUSPLUS_FRAMEPADDING_X * 2,
     CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
+  local title = classFrame:CreateFontString('CensusPlusClassesTitle', 'ARTWORK', 'GameFontHighlight')
+  title:SetPoint('CENTER', classFrame, 'TOP', 0, 12)
+  title:SetText(CENSUSPLUS_CLASS)
   for i = 1, classCount do
     local classLegend = CreateFrame('Button', 'CensusPlusClassLegend' .. i,
                                     classFrame, 'CensusPlusClassLegendTemplate',
@@ -1053,6 +1059,9 @@ local function createLevelFrames(levelCount)
   levelFrame:SetSize(
     levelCount * 6 + (levelCount - 1) * 4 + CENSUSPLUS_FRAMEPADDING_X * 2,
     CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
+  local title = levelFrame:CreateFontString('CensusPlusLevelsTitle', 'ARTWORK', 'GameFontHighlight')
+  title:SetPoint('CENTER', levelFrame, 'TOP', 0, 12)
+  title:SetText(CENSUSPLUS_LEVEL)
   for i = 1, levelCount do
     local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, levelFrame,
                                  'CensusPlusLevelBarTemplate', i)
@@ -1088,6 +1097,9 @@ local function createGuildFrames(anchorX, anchorY)
   guildFrame:SetSize(
     250 + CENSUSPLUS_FRAMEPADDING_X * 2 + scrollBarWidth,
     guildButtonHeight * guildButtonCount + CENSUSPLUS_FRAMEPADDING_Y * 2)
+  local title = guildFrame:CreateFontString('CensusPlusTopGuildsTitle', 'ARTWORK', 'GameFontHighlight')
+  title:SetPoint('CENTER', guildFrame, 'TOP', 0, 12)
+  title:SetText(CENSUSPLUS_TOPGUILD)
   for i = 1, guildButtonCount do
     local guildButton = CreateFrame('Button', 'CensusPlusGuildButton' .. i,
                                     guildFrame, 'CensusPlusGuildButtonTemplate',

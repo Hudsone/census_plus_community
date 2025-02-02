@@ -602,58 +602,6 @@
             </Anchor>
           </Anchors>
         </FontString>
-        <FontString name="CensusPlusTopGuildsTitle"
-                    inherits="GameFontHighlight"
-                    text="CENSUSPLUS_TOPGUILD">
-          <Anchors>
-            <Anchor point="TOPLEFT"
-                    relativeTo="CensusPlus">
-              <Offset>
-                <AbsDimension x="966"
-                              y="-90" />
-              </Offset>
-            </Anchor>
-          </Anchors>
-        </FontString>
-        <FontString name="CensusPlusRacesTitle"
-                    inherits="GameFontHighlight"
-                    text="CENSUSPLUS_RACE">
-          <Anchors>
-            <Anchor point="TOPLEFT"
-                    relativeTo="CensusPlus">
-              <Offset>
-                <AbsDimension x="76"
-                              y="-90" />
-              </Offset>
-            </Anchor>
-          </Anchors>
-        </FontString>
-        <FontString name="CensusPlusClassesTitle"
-                    inherits="GameFontHighlight"
-                    text="CENSUSPLUS_CLASS">
-          <Anchors>
-            <Anchor point="TOPLEFT"
-                    relativeTo="CensusPlus">
-              <Offset>
-                <AbsDimension x="604"
-                              y="-90" />
-              </Offset>
-            </Anchor>
-          </Anchors>
-        </FontString>
-        <FontString name="CensusPlusLevelsTitle"
-                    inherits="GameFontHighlight"
-                    text="CENSUSPLUS_LEVEL">
-          <Anchors>
-            <Anchor point="TOPLEFT"
-                    relativeTo="CensusPlus">
-              <Offset>
-                <AbsDimension x="500"
-                              y="-300" />
-              </Offset>
-            </Anchor>
-          </Anchors>
-        </FontString>
       </Layer>
     </Layers>
     <Frames>
