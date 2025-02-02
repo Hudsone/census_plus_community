@@ -1075,6 +1075,40 @@ local function createLevelFrames(levelCount)
   end
 end
 
+---Creates the guild frame.
+---@param anchorX number `x` of the TOPLEFT anchor.
+---@param anchorY number `y` of the TOPLEFT anchor.
+local function createGuildFrames(anchorX, anchorY)
+  local guildButtonCount = 10
+  local guildButtonHeight = 16
+  local scrollBarWidth = 22
+  local guildFrame = CreateFrame('Frame', 'CensusPlusGuildFrame', CensusPlus,
+                                 'CensusPlusPanelTemplate')
+  guildFrame:SetPoint('TOPLEFT', anchorX, anchorY)
+  guildFrame:SetSize(
+    250 + CENSUSPLUS_FRAMEPADDING_X * 2 + scrollBarWidth,
+    guildButtonHeight * guildButtonCount + CENSUSPLUS_FRAMEPADDING_Y * 2)
+  for i = 1, guildButtonCount do
+    local guildButton = CreateFrame('Button', 'CensusPlusGuildButton' .. i,
+                                    guildFrame, 'CensusPlusGuildButtonTemplate',
+                                    i)
+    guildButton:SetPoint('TOPLEFT', CENSUSPLUS_FRAMEPADDING_X,
+                         -((i - 1) * guildButtonHeight + CENSUSPLUS_FRAMEPADDING_Y))
+  end
+  local guildScrollFrame = CreateFrame('ScrollFrame',
+                                       'CensusPlusGuildScrollFrame', guildFrame,
+                                       'FauxScrollFrameTemplate')
+  guildScrollFrame:SetPoint('TOPLEFT', CENSUSPLUS_FRAMEPADDING_X,
+                            -CENSUSPLUS_FRAMEPADDING_Y)
+  guildScrollFrame:SetPoint('BOTTOMRIGHT', guildFrame, 'BOTTOMRIGHT',
+                            -CENSUSPLUS_FRAMEPADDING_X - scrollBarWidth,
+                            CENSUSPLUS_FRAMEPADDING_Y)
+  guildScrollFrame:SetScript('OnVerticalScroll', function(self, offset)
+    FauxScrollFrame_OnVerticalScroll(self, offset, CensusPlus_GUILDBUTTONSIZEY,
+                                     CensusPlus_UpdateGuildButtons);
+  end)
+end
+
 local function initializeRepetitiveFrameItems()
   local raceCount = 12
   local legendWidth = 32
@@ -1087,6 +1121,10 @@ local function initializeRepetitiveFrameItems()
   local classCount = 12
   createClassFrames(classCount, legendWidth, marginX, classAnchorX, classAnchorY)
   createLevelFrames(MAX_CHARACTER_LEVEL)
+  local guildAnchorX = 18 + classAnchorX + classCount * legendWidth +
+      (classCount - 1) * marginX
+  local guildAnchorY = classAnchorY
+  createGuildFrames(guildAnchorX, guildAnchorY)
 end
 
 function CensusPlus_OnLoad(self) -- referenced by CensusPlus.xml
