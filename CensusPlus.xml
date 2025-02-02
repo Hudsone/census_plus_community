@@ -471,7 +471,7 @@
         </FontString>
         <FontString name="CensusPlusText2"
                     inherits="GameFontHighlight"
-                    text="WarcraftRealms.com">
+                    text="Community Edition">
           <Color r="0.4"
                  g="0.8"
                  b="1.0" />

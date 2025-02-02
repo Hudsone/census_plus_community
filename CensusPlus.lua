@@ -1139,7 +1139,8 @@ function CensusPlus_OnLoad(self) -- referenced by CensusPlus.xml
   CensusPlusText:SetText('Census+ v' ..
     CensusPlus_VERSION ..
     'bpgus' .. CensusPlus_SubVersion .. ' ' .. CPp.CensusPlusLocale);
-  CensusPlusText2:SetText(CENSUSPLUS_UPLOAD);
+  -- `www.warcraftrealms.com` is no longer working now. Remove this sentence.
+  -- CensusPlusText2:SetText(CENSUSPLUS_UPLOAD);
 
   --[[		-- Init constant tables
 	--
