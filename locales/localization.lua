@@ -124,6 +124,9 @@ CENSUSPLUS_MAGHAR		= "Mag'har Orc";
 CENSUSPLUS_ZANDALARI		= "Zandalari Troll";
 CENSUSPLUS_VULPERA			= "Vulpera";
 
+CENSUSPLUS_DRACTHYR         = "Dracthyr"
+CENSUSPLUS_EARTHEN          = "Earthen"
+
 -- Blizzard provided translations THESE MUST BE AFTER THE ENGLISH DEFINITIONS
 --.. right or wrong it must match what Blizzard provides
 --frFR

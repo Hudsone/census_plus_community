@@ -408,7 +408,7 @@
          enableMouse="true"
          toplevel="true"
          movable="true">
-    <Size x="1250"
+    <Size x="1260"
           y="512" />
     <Anchors>
       <Anchor point="TOPLEFT">
@@ -423,18 +423,9 @@
         <!-- <Texture name="CensusPlusBackground" file="Interface\Dialogframe\UI-DialogBox-Background"> -->
         <Texture name="CensusPlusBackground"
                  file="Interface\Dialogframe\UI-DialogBox-Background-Dark">
-          <Size>
-            <!-- <AbsDimension x="1056" y="512" /> -->
-            <AbsDimension x="1248"
-                          y="512" />
-          </Size>
           <Anchors>
-            <Anchor point="TOPLEFT">
-              <Offset>
-                <AbsDimension x="0"
-                              y="0" />
-              </Offset>
-            </Anchor>
+            <Anchor point="TOPLEFT" x="0" y="0" />
+            <Anchor point="BOTTOMRIGHT" relativeTo="CensusPlus" relativePoint="BOTTOMRIGHT" x="0" y="0" />
           </Anchors>
         </Texture>
         <Texture file="Interface\AddOns\CensusPlus\Skin\CensusPlus_Window_Top_Shader">
@@ -885,8 +876,8 @@
         <Anchors>
           <Anchor point="TOPLEFT">
             <Offset>
-              <AbsDimension x="20"
-                            y="-292" />
+              <AbsDimension x="13"
+                            y="-316" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -907,10 +898,11 @@
         </Size>
         <Anchors>
           <Anchor point="TOPLEFT"
-                  relativeTo="CensusPlusTakeButton">
+                  relativeTo="CensusPlusTakeButton"
+                  relativePoint="BOTTOMLEFT">
             <Offset>
-              <AbsDimension x="134"
-                            y="0" />
+              <AbsDimension x="0"
+                            y="-2" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -956,10 +948,11 @@
         </Size>
         <Anchors>
           <Anchor point="TOPLEFT"
-                  relativeTo="CensusPlusStopButton">
+                  relativeTo="CensusPlusStopButton"
+                  relativePoint="BOTTOMLEFT">
             <Offset>
-              <AbsDimension x="440"
-                            y="0" />
+              <AbsDimension x="0"
+                            y="-2" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -986,10 +979,11 @@
         </Size>
         <Anchors>
           <Anchor point="TOPLEFT"
-                  relativeTo="CensusPlusPruneButton">
+                  relativeTo="CensusPlusPruneButton"
+                  relativePoint="BOTTOMLEFT">
             <Offset>
-              <AbsDimension x="136"
-                            y="0" />
+              <AbsDimension x="0"
+                            y="-2" />
             </Offset>
           </Anchor>
         </Anchors>
@@ -1019,8 +1013,8 @@
                   relativePoint="BOTTOMLEFT">
             <Offset>
               <!-- <AbsDimension x="44" y="-12" /> -->
-              <AbsDimension x="276"
-                            y="22" />
+              <AbsDimension x="0"
+                            y="-2" />
             </Offset>
           </Anchor>
         </Anchors>

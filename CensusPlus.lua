@@ -294,6 +294,7 @@ g_RaceClassList[CENSUSPLUS_DARKIRON]     = 41; --BfA
 g_RaceClassList[CENSUSPLUS_KULTIRAN]     = 43; --BfA
 g_RaceClassList[CENSUSPLUS_VULPERA]      = 44; --BfA8.3
 g_RaceClassList[CENSUSPLUS_MECHAGNOME]   = 45; --BfA8.3
+g_RaceClassList[CENSUSPLUS_EARTHEN]      = 46; --11.0
 
 CensusPlus_JobQueue.g_TimeDatabase       = {}; -- Time database
 local function CensusPlus_Zero_g_TimeDatabase()
@@ -529,6 +530,7 @@ function CensusPlus_GetFactionRaces(faction)
       CENSUSPLUS_ZANDALARI,
       CENSUSPLUS_VULPERA,
       CENSUSPLUS_DRACTHYR,
+      CENSUSPLUS_EARTHEN,
     };
   elseif (faction == CENSUSPlus_ALLIANCE) then
     ret = {
@@ -545,6 +547,7 @@ function CensusPlus_GetFactionRaces(faction)
       CENSUSPLUS_KULTIRAN,
       CENSUSPLUS_MECHAGNOME,
       CENSUSPLUS_DRACTHYR,
+      CENSUSPLUS_EARTHEN,
     };
   end
   return ret;
@@ -897,6 +900,27 @@ local function GetRaceClasses(race)
       CENSUSPLUS_MONK,
       CENSUSPLUS_DEATHKNIGHT,
     };
+  elseif race == CENSUSPLUS_DRACTHYR then
+    ret = {
+      CENSUSPLUS_WARRIOR,
+      CENSUSPLUS_HUNTER,
+      CENSUSPLUS_MAGE,
+      CENSUSPLUS_ROGUE,
+      CENSUSPLUS_PRIEST,
+      CENSUSPLUS_WARLOCK,
+    }
+  elseif race == CENSUSPLUS_EARTHEN then
+    ret = {
+      CENSUSPLUS_WARRIOR,
+      CENSUSPLUS_HUNTER,
+      CENSUSPLUS_MAGE,
+      CENSUSPLUS_ROGUE,
+      CENSUSPLUS_PRIEST,
+      CENSUSPLUS_WARLOCK,
+      CENSUSPLUS_PALADIN,
+      CENSUSPLUS_SHAMAN,
+      CENSUSPLUS_MONK,
+    }
   end
   return ret;
 end
@@ -1055,7 +1079,7 @@ end
 local function createLevelFrames(levelCount)
   local levelFrame = CreateFrame('Frame', 'CensusPlusLevelFrame', CensusPlus,
                                  'CensusPlusPanelTemplate')
-  levelFrame:SetPoint('TOPLEFT', 13, -316)
+  levelFrame:SetPoint('TOPLEFT', 147, -316)
   levelFrame:SetSize(
     levelCount * 6 + (levelCount - 1) * 4 + CENSUSPLUS_FRAMEPADDING_X * 2,
     CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
@@ -1122,7 +1146,7 @@ local function createGuildFrames(anchorX, anchorY)
 end
 
 local function initializeRepetitiveFrameItems()
-  local raceCount = 12
+  local raceCount = 14
   local legendWidth = 32
   local marginX = 6
   local raceAnchorX, raceAnchorY = 13, -113
@@ -1133,9 +1157,8 @@ local function initializeRepetitiveFrameItems()
   local classCount = 12
   createClassFrames(classCount, legendWidth, marginX, classAnchorX, classAnchorY)
   createLevelFrames(MAX_CHARACTER_LEVEL)
-  local guildAnchorX = 18 + classAnchorX + classCount * legendWidth +
-      (classCount - 1) * marginX
-  local guildAnchorY = classAnchorY
+  local guildAnchorX = 960
+  local guildAnchorY = -316
   createGuildFrames(guildAnchorX, guildAnchorY)
 end
 
