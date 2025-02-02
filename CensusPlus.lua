@@ -256,6 +256,8 @@ CENSUSPLUS_CURRENT_BATTLEFIELD_QUEUES    = {};
 
 local g_AccumulatedPruneData             = {};
 
+local g_SupportedRaceCount               = 14;
+local g_SupportedClassCount              = 13;
 local g_RaceClassList                    = {}; -- Used to pick the right icon
 g_RaceClassList[CENSUSPLUS_DRUID]        = 10;
 g_RaceClassList[CENSUSPLUS_HUNTER]       = 11;
@@ -1149,7 +1151,7 @@ local function createGuildFrames(anchorX, anchorY)
 end
 
 local function initializeRepetitiveFrameItems()
-  local raceCount = 14
+  local raceCount = g_SupportedRaceCount
   local legendWidth = 32
   local marginX = 6
   local raceAnchorX, raceAnchorY = 13, -113
@@ -1157,7 +1159,7 @@ local function initializeRepetitiveFrameItems()
   local classAnchorX = 24 + raceAnchorX + raceCount * legendWidth +
       (raceCount - 1) * marginX
   local classAnchorY = raceAnchorY
-  local classCount = 13
+  local classCount = g_SupportedClassCount
   createClassFrames(classCount, legendWidth, marginX, classAnchorX, classAnchorY)
   createLevelFrames(MAX_CHARACTER_LEVEL)
   local guildAnchorX = 960
