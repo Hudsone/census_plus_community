@@ -314,6 +314,7 @@ local function CensusPlus_Zero_g_TimeDatabase()
   CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEATHKNIGHT] = 0;
   CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MONK]        = 0;
   CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEMONHUNTER] = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_EVOKER]      = 0;
 end
 CensusPlus_Zero_g_TimeDatabase();
 
