@@ -11,6 +11,41 @@
   <Script file="realmlist_US.lua" />
   <Script file="realmlist_EU.lua" />
   <Script file="CensusPlus.lua" />
+  <Frame name="CensusPlusVersionTagTemplate"
+         mixin="CensusPlusVersionTagMixin"
+         virtual="true">
+    <Size x="0"
+          y="0" />
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString parentKey="Version"
+                    inherits="GameFontNormalSmall"
+                    justifyH="LEFT"
+                    justifyV="TOP">
+          <Anchors>
+            <Anchor point="TOPRIGHT"
+                    x="0"
+                    y="266" />
+          </Anchors>
+        </FontString>
+        <FontString parentKey="Edition"
+                    inherits="GameFontNormalSmall"
+                    justifyH="LEFT"
+                    justifyV="TOP"
+                    text="Community Edition">
+          <Color r="0.0"
+                 g="1.0"
+                 b="1.0"
+                 a="1.0" />
+          <Anchors>
+            <Anchor point="TOPRIGHT"
+                    x="0"
+                    y="280" />
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+  </Frame>
   <Frame name="CensusPlusPanelTemplate"
          virtual="true">
     <!-- The padding is (6, 5) -->
@@ -424,8 +459,14 @@
         <Texture name="CensusPlusBackground"
                  file="Interface\Dialogframe\UI-DialogBox-Background-Dark">
           <Anchors>
-            <Anchor point="TOPLEFT" x="0" y="0" />
-            <Anchor point="BOTTOMRIGHT" relativeTo="CensusPlus" relativePoint="BOTTOMRIGHT" x="0" y="0" />
+            <Anchor point="TOPLEFT"
+                    x="0"
+                    y="0" />
+            <Anchor point="BOTTOMRIGHT"
+                    relativeTo="CensusPlus"
+                    relativePoint="BOTTOMRIGHT"
+                    x="0"
+                    y="0" />
           </Anchors>
         </Texture>
         <Texture file="Interface\AddOns\CensusPlus\Skin\CensusPlus_Window_Top_Shader">
