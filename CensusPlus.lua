@@ -5704,7 +5704,7 @@ function CensusPlusBlizzardOptions()
   local SavedVars = CensusPlus_Database.Info
   local name = C_AddOns.GetAddOnMetadata('CensusPlus', 'Title')
   local category, layout = Settings.RegisterVerticalLayoutCategory(name)
-  local addonSettings1 = {
+  local addonSettings = {
     {
       name = CENSUS_OPTIONS_VERBOSE,
       variable = 'CensusPlusCheckButton1',
@@ -5799,7 +5799,7 @@ function CensusPlusBlizzardOptions()
     }
   }
 
-  for _, settingParameters in ipairs(addonSettings1) do
+  for _, settingParameters in ipairs(addonSettings) do
     local name = settingParameters.name
     local variable = settingParameters.variable
     local variableKey = settingParameters.variableKey
