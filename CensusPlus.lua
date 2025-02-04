@@ -1550,7 +1550,7 @@ function CensusPlus_Command(param)
   end
 end
 
-function CensusPlus_Verbose(self)
+function CensusPlus_Verbose()
   --print(CensusPlus_Database["Info"]["Verbose"])
   --print(CensusPlus_PerCharInfo["Verbose"])
   if ((CensusPlus_PerCharInfo['Verbose'] == nil) and (CensusPlus_Database['Info']['Verbose'] == true)) then
@@ -5707,16 +5707,15 @@ function CensusPlusBlizzardOptions()
   local addonSettings = {
     {
       name = CENSUS_OPTIONS_VERBOSE,
-      variable = 'CensusPlusCheckButton1',
+      variable = 'CensusPlusCheckButton1', -- I actually don't know how this is used.
       variableKey = 'Verbose',
       defaultValue = false,
       tooltip = CENSUS_OPTIONS_VERBOSE_TOOLTIP,
       callback = function(setting, value)
-        local g_AW_Verbose = value
-        if (g_AW_Verbose) then
+        if (value) then
           print('Settings: CensusPlus_Stealth(self) - off')
         end
-        print('Settings: CensusPlus_Verbose(self) - on/off')
+        CensusPlus_Verbose()
       end,
     },
     {
