@@ -469,6 +469,8 @@
                     y="0" />
           </Anchors>
         </Texture>
+      </Layer>
+      <Layer level="BORDER">
         <Texture file="Interface\AddOns\CensusPlus\Skin\CensusPlus_Window_Top_Shader">
           <!-- Top Shader -->
           <Size>
