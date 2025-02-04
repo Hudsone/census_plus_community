@@ -1596,7 +1596,7 @@ function CensusPlus_Verbose_toggle(state)
   end
 end
 
-local function CensusPlus_Stealth(self)
+local function CensusPlus_Stealth()
   --print(CensusPlus_Database["Info"]["Stealth"])
   --print(CensusPlus_PerCharInfo["Stealth"])
   if ((CensusPlus_PerCharInfo['Stealth'] == nil) and (CensusPlus_Database['Info']['Stealth'] == true)) then
@@ -1615,7 +1615,6 @@ local function CensusPlus_Stealth(self)
     --print("call stealth farm")
   end
 end
-
 
 function CensusPlus_Stealth_toggle(state)
   if (state == 'alter') then
@@ -5702,22 +5701,9 @@ end
 
 function CensusPlusBlizzardOptions()
   local SavedVars = CensusPlus_Database.Info
-  local name = C_AddOns.GetAddOnMetadata('CensusPlus', 'Title')
-  local category, layout = Settings.RegisterVerticalLayoutCategory(name)
+  local categoryName = C_AddOns.GetAddOnMetadata('CensusPlus', 'Title')
+  local category, layout = Settings.RegisterVerticalLayoutCategory(categoryName)
   local addonSettings = {
-    {
-      name = CENSUS_OPTIONS_VERBOSE,
-      variable = 'CensusPlusCheckButton1', -- I actually don't know how this is used.
-      variableKey = 'Verbose',
-      defaultValue = false,
-      tooltip = CENSUS_OPTIONS_VERBOSE_TOOLTIP,
-      callback = function(setting, value)
-        if (value) then
-          print('Settings: CensusPlus_Stealth(self) - off')
-        end
-        CensusPlus_Verbose()
-      end,
-    },
     {
       name = CENSUS_OPTIONS_STEALTH,
       variable = 'CensusPlusCheckButton2',
@@ -5725,11 +5711,20 @@ function CensusPlusBlizzardOptions()
       defaultValue = false,
       tooltip = CENSUS_OPTIONS_STEALTH_TOOLTIP,
       callback = function(setting, value)
-        local g_AW_Stealth = value
-        if (g_AW_Stealth) then
-          print('Settings: CensusPlus_Verbose(self) - off')
+        CensusPlus_Stealth()
+        if not value then
+          CensusPlus_Verbose()
         end
-        print('Settings: CensusPlus_Stealth(self) - on/off')
+      end,
+    },
+    {
+      name = CENSUS_OPTIONS_VERBOSE,
+      variable = 'CensusPlusCheckButton1', -- I actually don't know how this is used.
+      variableKey = 'Verbose',
+      defaultValue = false,
+      tooltip = CENSUS_OPTIONS_VERBOSE_TOOLTIP,
+      callback = function(setting, value)
+        CensusPlus_Verbose()
       end,
     },
     {
@@ -5797,6 +5792,8 @@ function CensusPlusBlizzardOptions()
       end,
     }
   }
+  local stealthInitializer = nil
+  local verboseInitializer = nil
 
   for _, settingParameters in ipairs(addonSettings) do
     local name = settingParameters.name
@@ -5810,9 +5807,16 @@ function CensusPlusBlizzardOptions()
                                                   variableTbl, type(defaultValue),
                                                   name, defaultValue)
     setting:SetValueChangedCallback(callback)
-    Settings.CreateCheckbox(category, setting, tooltip)
-    CensusPlus_OptionCategory = category
+    local initializer = Settings.CreateCheckbox(category, setting, tooltip)
+    if name == CENSUS_OPTIONS_VERBOSE then
+      verboseInitializer = initializer
+    elseif name == CENSUS_OPTIONS_STEALTH then
+      stealthInitializer = initializer
+    end
   end
+
+  local function isModifiable() return not SavedVars.Stealth end
+  verboseInitializer:SetParentInitializer(stealthInitializer, isModifiable)
 
   do
     local name = CENSUSPLUS_TRANSPARENCY
@@ -5846,6 +5850,7 @@ function CensusPlusBlizzardOptions()
   layout:AddInitializer(Settings.CreateElementInitializer(
     'CensusPlusVersionTagTemplate', {version = CensusPlus_VERSION_FULL}));
   Settings.RegisterAddOnCategory(category)
+  CensusPlus_OptionCategory = category
 end
 
 function CensusPlus_ResetConfig() -- reset to defaults
