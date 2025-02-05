@@ -5747,11 +5747,7 @@ function CensusPlusBlizzardOptions()
       defaultValue = true,
       tooltip = ENABLE .. ' ' .. CENSUSPLUS_CENSUSBUTTONANIMITEXT,
       callback = function(setting, value)
-        local g_AWCensusButtonAnimi = value
-        if (g_AWCensusButtonAnimi) then
-          print('CensusPlus_CensusButtonShown(self) - on')
-        end
-        print('CensusPlus_CensusButtonAnimi(self) - on/off')
+        CensusPlus_CensusButtonAnimi(self)
       end,
     },
     {
