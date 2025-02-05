@@ -4735,7 +4735,8 @@ print("realm change "..current_realm)
     local emptyButton = _G[buttonEmptyName];
     local thisCount = g_LevelCount[i];
     if ((thisCount ~= nil) and (thisCount > 0) and (maxCount > 0)) then
-      local height = floor((log(thisCount) / logMaxCount) *
+      -- log(1) = 0 and it would make the level bar nearly invisible.
+      height = floor((log(thisCount + 0.5) / logMaxCount) *
         CensusPlus_MAXBARHEIGHT);
       if (CensusPlus_Database['Info']['UseLogBars'] == false) then
         height = floor(((thisCount) / maxCount) * CensusPlus_MAXBARHEIGHT);
@@ -5782,9 +5783,7 @@ function CensusPlusBlizzardOptions()
       variableKey = 'UseLogBars',
       defaultValue = true,
       tooltip = CENSUS_OPTIONS_LOG_BARSTEXT,
-      callback = function(setting, value)
-        -- Not yet implemented.
-      end,
+      callback = function(setting, value) end,
     }
   }
   local stealthInitializer = nil
@@ -5819,7 +5818,8 @@ function CensusPlusBlizzardOptions()
   local function isModifiable() return not SavedVars.Stealth end
   verboseInitializer:SetParentInitializer(stealthInitializer, isModifiable)
   local function isAniModifiable() return SavedVars.CensusButtonShown end
-  buttonAniInitializer:SetParentInitializer(buttonShowInitializer, isAniModifiable)
+  buttonAniInitializer:SetParentInitializer(buttonShowInitializer,
+                                            isAniModifiable)
 
   do
     local name = CENSUSPLUS_TRANSPARENCY
