@@ -1640,7 +1640,7 @@ function CensusPlus_Stealth_toggle(state)
   end
 end
 
-local function CensusPlus_CensusButtonShown(self)
+local function CensusPlus_CensusButtonShown()
   --print(CensusPlus_Database["Info"]["CensusButtonShown"])
   --print(CensusPlus_PerCharInfo["CensusButtonShown"])
   if ((CensusPlus_PerCharInfo['CensusButtonShown'] == nil) and (CensusPlus_Database['Info']['CensusButtonShown'] == true)) then
@@ -1688,7 +1688,7 @@ function CensusPlus_CensusButtonShown_toggle(state)
   end
 end
 
-local function CensusPlus_CensusButtonAnimi(self)
+local function CensusPlus_CensusButtonAnimi()
   --print(CensusPlus_Database["Info"]["CensusButtonAnimi"])
   --print(CensusPlus_PerCharInfo["CensusButtonAnimi"])
   if ((CensusPlus_PerCharInfo['CensusButtonAnimi'] == nil) and (CensusPlus_Database['Info']['CensusButtonAnimi'] == true)) then
@@ -5734,11 +5734,10 @@ function CensusPlusBlizzardOptions()
       defaultValue = true,
       tooltip = CENSUS_OPTIONS_BUTSHOW,
       callback = function(setting, value)
-        local g_AW_CensusButtonShown = value
-        if (not g_AW_CensusButtonShown) then
-          print('CensusPlus_CensusButtonAnimi(self) - off')
+        CensusPlus_CensusButtonShown()
+        if value then
+          CensusPlus_CensusButtonAnimi()
         end
-        print('CensusPlus_CensusButtonShown(self) - on/off')
       end,
     },
     {
@@ -5794,6 +5793,8 @@ function CensusPlusBlizzardOptions()
   }
   local stealthInitializer = nil
   local verboseInitializer = nil
+  local buttonShowInitializer = nil
+  local buttonAniInitializer = nil
 
   for _, settingParameters in ipairs(addonSettings) do
     local name = settingParameters.name
@@ -5812,11 +5813,17 @@ function CensusPlusBlizzardOptions()
       verboseInitializer = initializer
     elseif name == CENSUS_OPTIONS_STEALTH then
       stealthInitializer = initializer
+    elseif name == CENSUS_OPTIONS_BUTSHOW then
+      buttonShowInitializer = initializer
+    elseif name == CENSUSPLUS_CENSUSBUTTONANIMITEXT then
+      buttonAniInitializer = initializer
     end
   end
 
   local function isModifiable() return not SavedVars.Stealth end
   verboseInitializer:SetParentInitializer(stealthInitializer, isModifiable)
+  local function isAniModifiable() return SavedVars.CensusButtonShown end
+  buttonAniInitializer:SetParentInitializer(buttonShowInitializer, isAniModifiable)
 
   do
     local name = CENSUSPLUS_TRANSPARENCY
