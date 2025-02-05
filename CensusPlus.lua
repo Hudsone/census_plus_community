@@ -1787,7 +1787,7 @@ end
 --
   ]]
 
-local function CensusPlus_SetAutoCensus(self)
+local function CensusPlus_SetAutoCensus()
   --print(CensusPlus_Database["Info"]["AutoCensus"]) --((CensusPlus_PerCharInfo["AutoCensus"] == nil)and
   --print(CensusPlus_PerCharInfo["AutoCensus"])
   if ((CensusPlus_PerCharInfo['AutoCensus'] == nil) and (CensusPlus_Database['Info']['AutoCensus'] == true)) then
@@ -5748,7 +5748,7 @@ function CensusPlusBlizzardOptions()
       defaultValue = true,
       tooltip = ENABLE .. ' ' .. CENSUSPLUS_CENSUSBUTTONANIMITEXT,
       callback = function(setting, value)
-        CensusPlus_CensusButtonAnimi(self)
+        CensusPlus_CensusButtonAnimi()
       end,
     },
     {
@@ -5758,12 +5758,7 @@ function CensusPlusBlizzardOptions()
       defaultValue = false,
       tooltip = CENSUSPLUS_AUTOCENSUSTEXT,
       callback = function(setting, value)
-        local g_AW_AutoCensus = value
-        -- if (not g_AW_AutoCensus) then
-        -- Reset AutoCensus Timer and disable the slidebar.
-        -- CensusPlus_Database.Info.AutoCensusTimer = 1800;
-        -- end
-        print('CensusPlus_SetAutoCensus(self) - on/off')
+        CensusPlus_SetAutoCensus()
       end,
     },
     {
