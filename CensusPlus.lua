@@ -3042,6 +3042,11 @@ function CensusPlus_InitializeVariables()
 
   CensusPlus_OptionCategory = nil;
   CensusPlusBlizzardOptions()
+  CensusPlus_Verbose()
+  CensusPlus_Stealth()
+  CensusPlus_CensusButtonAnimi()
+  CensusPlus_CensusButtonShown()
+  CensusPlus_SetAutoCensus()
   CPp.FirstLoad = false -- main table initialized and options initialized
 
   --	print("CensusTrigger ".. CPp.AutoStartTrigger)
