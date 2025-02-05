@@ -2543,7 +2543,7 @@ function CensusPlus_OnEvent(self, event, ...) -- referenced by CensusPlus.xml
       self:UnregisterEvent('PLAYER_ENTERING_WORLD')
       if (g_addon_loaded) and (g_player_loaded) then
         CensusPlus_InitializeVariables()
-        InitializeExperimental()
+        -- InitializeExperimental()
       end
     end
   end
