@@ -4744,7 +4744,7 @@ print("realm change "..current_realm)
       -- log(1) = 0 and it would make the level bar nearly invisible.
       height = floor((log(thisCount + 0.5) / logMaxCount) *
         CensusPlus_MAXBARHEIGHT);
-      if (CensusPlus_Database['Info']['UseLogBars'] == false) then
+      if (CensusPlus_Database['Info']['UseLogBars'] == false or maxCount <= 10) then
         height = floor(((thisCount) / maxCount) * CensusPlus_MAXBARHEIGHT);
       end
 
