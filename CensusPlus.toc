@@ -1,6 +1,7 @@
 ## Interface: 110007
 ## Version: @project-version@
 ## Title: CensusPlus
+## IconTexture: Interface\AddOns\CensusPlus\Skin\Logo
 ## Notes: This AddOn is licenced under the GNU GPL, see LICENSE for details.
 ## Notes: Collects and displays census information. 
 ## Original Author: Ian Pieragostini
