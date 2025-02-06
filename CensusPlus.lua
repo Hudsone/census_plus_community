@@ -148,8 +148,8 @@ local g_Verbose = false;                        -- Verbose mode switch
 local g_Options_confirm_txt = true;             -- enable chatty confirm of options until user no longer desires
 CPp.AutoCensus = false;                         -- AutoCensus mode switch
 local g_Options_Scope = 'AW'                    -- options are AW or CO
-CPp.AutoStartTimer = 30                         -- default Slider value in Options
-CPp.AutoStartTrigger = 15                       -- time limiter in minutes if Slider less then this value auto start enabled
+CPp.AutoStartTimer = 20                         -- default Slider value in Options
+CPp.AutoStartTrigger = 21                       -- time limiter in minutes if Slider less then this value auto start enabled
 local g_FinishSoundNumber = 1                   -- default finish sound..
 local g_PlayFinishSound = false                 -- mode switch
 local g_CensusPlusInitialized = false;          -- Is CensusPlus initialized?
@@ -5761,7 +5761,7 @@ function CensusPlusBlizzardOptions()
       name = CENSUS_OPTIONS_AUTOCENSUS,
       variable = 'CensusPlusCheckButton5',
       variableKey = 'AutoCensus',
-      defaultValue = false,
+      defaultValue = true,
       tooltip = CENSUSPLUS_AUTOCENSUSTEXT,
       callback = function(setting, value)
         CensusPlus_SetAutoCensus()
