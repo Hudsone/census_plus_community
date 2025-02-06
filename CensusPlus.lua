@@ -2124,7 +2124,7 @@ if more then x time then dump queues and restart as new start else set below sta
     --		print ("continue last Census");
     local queue_entry_count = #CensusPlus_JobQueue;
     --		print (queue_entry_count);
-    g_FirstRun = False;
+    g_FirstRun = false;
   else
     --		print ("Start new Census");
     CensusPlus_JobQueue = {};
