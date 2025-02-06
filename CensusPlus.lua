@@ -1260,6 +1260,22 @@ function InitializeExperimental()
   end
 end
 
+local function shuffle(arr)
+  for i = 1, #arr - 1 do
+    local j = fastrandom(i, #arr)
+    arr[i], arr[j] = arr[j], arr[i]
+  end
+end
+
+local function shuffled_numbers(n)
+  local numbers = {}
+  for i = 1, n do
+    numbers[i] = i
+  end
+  shuffle(numbers)
+  return numbers
+end
+
 function CP_ProcessWhoEvent(query, result)
   local complete = (#result < MAX_WHOS_FROM_SERVER)
   if (CPp.IsCensusPlusInProgress ~= true) then
@@ -1341,7 +1357,7 @@ function CP_ProcessWhoEvent(query, result)
 				]]
         local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
         local numRaces = #thisFactionRaces;
-        for i = 1, numRaces, 1 do
+        for _, i in ipairs(shuffled_numbers(numRaces)) do
           if (CensusPlus_Database['Info']['ClientLocale'] ~= 'deDE') then
             if (CENSUSPLUS_LIGHTFORGED ~= thisFactionRaces[i])
                 and (CENSUSPLUS_DARKIRON ~= thisFactionRaces[i])
@@ -1372,7 +1388,7 @@ function CP_ProcessWhoEvent(query, result)
           local thisRaceClasses = GetRaceClasses(race);
           local numClasses = #thisRaceClasses;
           --					print(numClasses);
-          for i = 1, numClasses, 1 do
+          for _, i in ipairs(shuffled_numbers(numClasses)) do
             --					print(thisRaceClasses[i]);
             if CENSUSPLUS_DEMONHUNTER ~= thisRaceClasses[i] then
               local job = CensusPlus_CreateJob(level, level, race,
