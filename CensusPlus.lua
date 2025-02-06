@@ -1739,7 +1739,7 @@ function CensusPlus_CensusButtonAnimi_toggle(state)
   end
 end
 
-function CensusPlus_FinishSound(state)
+function CensusPlus_FinishSound()
   --print(CensusPlus_Database["Info"]["PlayFinishSound"])
   --print(CensusPlus_PerCharInfo["PlayFinishSound"])
   if ((CensusPlus_PerCharInfo['PlayFinishSound'] == nil) and (CensusPlus_Database['Info']['PlayFinishSound'] == true)) then
@@ -3047,6 +3047,7 @@ function CensusPlus_InitializeVariables()
   CensusPlus_CensusButtonAnimi()
   CensusPlus_CensusButtonShown()
   CensusPlus_SetAutoCensus()
+  CensusPlus_FinishSound()
   CPp.FirstLoad = false -- main table initialized and options initialized
 
   --	print("CensusTrigger ".. CPp.AutoStartTrigger)
@@ -5773,8 +5774,7 @@ function CensusPlusBlizzardOptions()
       defaultValue = false,
       tooltip = CENSUSPLUS_AUTOCENSUSTEXT,
       callback = function(setting, value)
-        local g_AW_FinishSound = value
-        print('CensusPlus_FinishSound(self) - on/off')
+        CensusPlus_FinishSound()
       end,
     },
     {
