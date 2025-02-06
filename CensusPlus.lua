@@ -1007,6 +1007,10 @@ function CensusPlus_ToggleOptions(self) -- referenced by CensusPlus.xml
 end
 
 local function initializeAfterAddonLoaded()
+  if CensusPlus_Database.Info == nil then
+    CensusPlus_Database['Info'] = {}
+    CensusPlus_ResetConfig()
+  end
   g_CPWin_background_alpha = CensusPlus_Database.Info.CPWindow_Transparency
   CensusPlusBackground:SetAlpha(g_CPWin_background_alpha / 100)
   CensusPlayerListBackground:SetAlpha(g_CPWin_background_alpha / 100)
@@ -5873,7 +5877,7 @@ function CensusPlusBlizzardOptions()
 end
 
 function CensusPlus_ResetConfig() -- reset to defaults
-  CensusPlus_Database['Info']['AutoCensus'] = false
+  CensusPlus_Database['Info']['AutoCensus'] = true
   CensusPlus_PerCharInfo['AutoCensus'] = nil
   CensusPlus_Database['Info']['Verbose'] = false
   CensusPlus_PerCharInfo['Verbose'] = nil
@@ -5889,7 +5893,7 @@ function CensusPlus_ResetConfig() -- reset to defaults
   CensusPlus_PerCharInfo['CensusButtonShown'] = nil
   CensusPlus_Database['Info']['CensusButtonAnimi'] = true
   CensusPlus_PerCharInfo['CensusButtonAnimi'] = nil
-  CensusPlus_Database['Info']['CPWindow_Transparency'] = 0.5
+  CensusPlus_Database['Info']['CPWindow_Transparency'] = 50
   CensusPlus_Database['Info']['UseLogBars'] = true
   CensusPlus_Database['Info']['UseWorldFrameClicks'] = false
   CensusPlus_Database['Info']['UseInterfaceClicks'] = false
