@@ -8,7 +8,7 @@
 ## Modified By: Cooper Sellers - www.warcraftrealms.com 
 ## Modified By: sylvanaar - LibWho integration
 ## Modified By: Bringoutyourdead with support from Balgair both at www.warcraftrealms.com 
-## Modified By: Hsiwei Chang
+## Modified By: Hsiwei Chang (Hudsone)
 ## OptionalDeps: LibStub, CallbackHandler-1.0, LibWho-3.0
 ## SavedVariables: CensusPlus_Database, CensusPlus_CRealms, CensusPlus_Guilds, CensusPlus_JobQueue
 ## SavedVariablesPerCharacter: CensusPlus_PerCharInfo
