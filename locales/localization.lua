@@ -27,26 +27,21 @@ CENSUSPlusFemale                = {};
 
 CENSUSPLUS_TEXT                 = 'Census+';
 
-CENSUSPLUS_MSG1                 =
-' Loaded - type /censusplus or /census+  or /census for valid commands';
-CENSUSPLUS_UPLOAD               =
-'Be sure to upload your CensusPlus data to www.WarcraftRealms.com!';
+CENSUSPLUS_MSG1                 = ' Loaded - type /censusplus or /census+  or /census for valid commands';
+CENSUSPLUS_UPLOAD               = 'Be sure to upload your CensusPlus data to www.WarcraftRealms.com!';
 CENSUSPLUS_PAUSE                = 'Pause';
 CENSUSPLUS_UNPAUSE              = 'Resume';
 CENSUSPLUS_STOP                 = 'Stop';
 
 CENSUSPLUS_PRUNE                = 'Prune';
-CENSUSPLUS_PRUNECENSUS          =
-'Prune the database by removing characters not seen in 30 days.';
+CENSUSPLUS_PRUNECENSUS          = 'Prune the database by removing characters not seen in 30 days.';
 CENSUSPLUS_PRUNEINFO            = 'Pruned %d characters.';
 CENSUSPLUS_PURGEDATABASE        = 'Purge the database of all data';
 CENSUSPLUS_PURGE                = 'Purge';
 CENSUSPLUS_PURGEMSG             = 'Purged character database.';
-CENSUSPLUS_PURGE_LOCAL_CONFIRM  =
-'Are you sure you wish to PURGE your local database?';
+CENSUSPLUS_PURGE_LOCAL_CONFIRM  = 'Are you sure you wish to PURGE your local database?';
 
-CENSUSPLUS_TAKECENSUS           =
-'Take a census of players \ncurrently online on this server \nand in this faction';
+CENSUSPLUS_TAKECENSUS           = 'Take a census of players \ncurrently online on this server \nand in this faction';
 CENSUSPLUS_PAUSECENSUS          = 'Pause the current census';
 CENSUSPLUS_UNPAUSECENSUS        = 'Resume the current census';
 CENSUSPLUS_STOPCENSUS_TOOLTIP   = 'Stop the currently active CensusPlus';
@@ -54,8 +49,7 @@ CENSUSPLUS_ISINPROGRESS         = 'A CensusPlus is in progress, try again later'
 CENSUSPLUS_TAKINGONLINE         = 'Taking census of characters online...';
 CENSUSPLUS_NOCENSUS             = 'A Census is not currently in progress';
 CENSUSPLUS_NOTINFACTION         = 'Neutral faction - census not allowed';
-CENSUSPLUS_FINISHED             =
-'Finished Taking data. Found %s new characters and saw %s. Took %s.';
+CENSUSPLUS_FINISHED             = 'Finished Taking data. Found %s new characters and saw %s. Took %s.';
 CENSUSPLUS_TOOMANY              = 'WARNING: Too many characters matching: %s';
 CENSUSPLUS_WAITING              = 'Waiting to send who request...';
 CENSUSPLUS_SENDING              = 'Ready to Send /who %s';
@@ -481,33 +475,26 @@ CENSUSPLUS_OPTIONS_HEADER                      = 'Census+ Options';
 CENSUSPLUS_ACCOUNT_WIDE                        = 'Account wide'
 CENSUSPLUS_ACCOUNT_WIDE_ONLY_OPTIONS           = 'Account Wide Only options'
 CENSUSPLUS_CCO_OPTIONOVERRIDES                 = 'Option overrides for this character only'
-CENSUSPLUS_ISINBG                              =
-'You are currently in a Battleground so a Census cannot be taken';
+CENSUSPLUS_ISINBG                              = 'You are currently in a Battleground so a Census cannot be taken';
 CENSUS_OPTIONS_BUTSHOW                         = 'Show Census Button';
 CENSUS_OPTIONS_AUTOCENSUS                      = 'Auto-Census';
 CENSUS_OPTIONS_AUTOSTART                       = 'Auto-Start';
 CENSUS_OPTIONS_VERBOSE                         = 'Verbose';
-CENSUS_OPTIONS_VERBOSE_TOOLTIP                 =
-'Enables verbose text in chat window, disables Stealth mode'
+CENSUS_OPTIONS_VERBOSE_TOOLTIP                 = 'Enables verbose text in chat window, disables Stealth mode'
 CENSUS_OPTIONS_STEALTH                         = 'Stealth'
-CENSUS_OPTIONS_STEALTH_TOOLTIP                 =
-'Stealth mode - no chat messages, disables Verbose'
+CENSUS_OPTIONS_STEALTH_TOOLTIP                 = 'Stealth mode - no chat messages, disables Verbose'
 CENSUS_OPTIONS_SOUND_ON_COMPLETE               = 'Play Sound When Done';
 CENSUS_OPTIONS_SOUND_TOOLTIP                   = 'Enable Sound then select Sound File';
 CENSUS_OPTIONS_SOUNDFILE                       = 'Select User provided SoundFile number ';
 CENSUS_OPTIONS_SOUNDFILETEXT                   = 'Select desired .mp3 or .OGG sound file'
-CENSUS_OPTIONS_TIMER_TOOLTIP                   =
-'Sets delay in minutes from the last Census ending.'
+CENSUS_OPTIONS_TIMER_TOOLTIP                   = 'Sets delay in minutes from the last Census ending.'
 CENSUS_OPTIONS_LOG_BARS                        = 'Logarithmic Level Bars';
 CENSUS_OPTIONS_LOG_BARSTEXT                    = 'Enables Logarithmic scaling on display bars'
-CENSUS_OPTIONS_BACKGROUND_TRANSPARENCY_TOOLTIP =
-'Background transparency - ten steps'
+CENSUS_OPTIONS_BACKGROUND_TRANSPARENCY_TOOLTIP = 'Background transparency - ten steps'
 CENSUSPLUS_VERBOSE_TOOLTIP                     = 'Deselect to stop the spam!';
-CENSUSPlus_AUTOCENSUS_TOOLTIP                  =
-'Enable Census+ to run automatically while playing';
+CENSUSPlus_AUTOCENSUS_TOOLTIP                  = 'Enable Census+ to run automatically while playing';
 CENSUSPLUS_OPTIONS_CHATTYCONFIRM               = 'Chatty Option confirmation - check to enable'
-CENSUSPLUS_OPTIONS_CHATTY_TOOLTIP              =
-'Enable chat to show current options settings - displays on interface options window opening and many CensusPlus option changes'
+CENSUSPLUS_OPTIONS_CHATTY_TOOLTIP              = 'Enable chat to show current options settings - displays on interface options window opening and many CensusPlus option changes'
 
 CENSUSPLUS_BUTTON_CHARACTERS                   = 'Show Chars';
 CENSUSPLUS_CHARACTERS                          = 'Characters';
@@ -516,16 +503,11 @@ CENSUS_BUTTON_TOOLTIP                          = 'Open CensusPlus';
 -- >6.1.2
 -- CensusPlus_
 CENSUSPLUS_PROBLEMNAME                         = 'This name is problematic => ';
-CENSUSPLUS_PROBLEMNAME_ACTION                  =
-', name skipped.  This message will only be shown once.';
-CENSUSPLUS_BADLOCAL_1                          =
-'You appear to have a US Census version, yet your localization is set to French or German or Italian.';
-CENSUSPLUS_BADLOCAL_2                          =
-'Please do not upload data to WarcraftRealms until this has been resolved.';
-CENSUSPLUS_BADLOCAL_3                          =
-'If this is incorrect, please let Bringoutyourdead know at www.WarcraftRealms.com about your situation so he can make corrections.';
-CENSUSPLUS_WRONGLOCAL_PURGE                    =
-'Locale differs from previous setting, purging database.';
+CENSUSPLUS_PROBLEMNAME_ACTION                  = ', name skipped.  This message will only be shown once.';
+CENSUSPLUS_BADLOCAL_1                          = 'You appear to have a US Census version, yet your localization is set to French or German or Italian.';
+CENSUSPLUS_BADLOCAL_2                          = 'Please do not upload data to WarcraftRealms until this has been resolved.';
+CENSUSPLUS_BADLOCAL_3                          = 'If this is incorrect, please let Bringoutyourdead know at www.WarcraftRealms.com about your situation so he can make corrections.';
+CENSUSPLUS_WRONGLOCAL_PURGE                    = 'Locale differs from previous setting, purging database.';
 CENSUSPLUS_WAS                                 = ' was ';
 CENSUSPLUS_NOW                                 = ' now ';
 CENSUSPLUS_USING_WHOLIB                        = 'Using WhoLib';
@@ -554,12 +536,10 @@ CENSUSPLUS_PLAYFINISHSOUNDOFF                  = 'PlayFinishSound Mode : OFF';
 CENSUSPLUS_PLAYFINISHSOUNDNUM                  = 'FinishSound number '
 CENSUS_OPTIONS_CCO_REMOVE_OVERRIDE             = 'Remove Override'
 CENSUSPLUS_UNKNOWNRACE                         = 'Found an unknown race ( ';
-CENSUSPLUS_UNKNOWNRACE_ACTION                  =
-' ), please tell Bringoutyourdead at WarcraftRealms.com';
+CENSUSPLUS_UNKNOWNRACE_ACTION                  = ' ), please tell Bringoutyourdead at WarcraftRealms.com';
 CENSUSPLUS_TOOSLOW                             = 'Update too slow! Computer overloaded?Connection problems?';
 CENSUSPLUS_LANGUAGECHANGED                     = 'Client Language changed, Database purged.';
-CENSUSPLUS_CONNECTEDREALMSFOUND                =
-'CensusPlus found the following Connected Realms';
+CENSUSPLUS_CONNECTEDREALMSFOUND                = 'CensusPlus found the following Connected Realms';
 CENSUSPLUS_OBSOLETEDATAFORMATTEXT              = 'Old Database format found, Database purged.'
 CENSUSPLUS_TRANSPARENCY                        = 'Census window transparency'
 CENSUSPLUS_PURGEDALL                           = 'All Census Data Purged';
@@ -568,20 +548,13 @@ CENSUSPLUS_HELP_1                              = ' _ Toggle verbose mode off/on'
 CENSUSPLUS_HELP_2                              = ' _ Brings up the Option window';
 CENSUSPLUS_HELP_3                              = ' _ Start a Census snapshot';
 CENSUSPLUS_HELP_4                              = ' _ Stop a Census snapshot';
-CENSUSPLUS_HELP_5                              =
-' X  _ Prune the database by removing characters not seen in X days - default X = 30';
-CENSUSPLUS_HELP_6                              =
-' X _ Prune the database by removing all characters not seen in X days from servers other than the one you are currently on. - default X = 0';
+CENSUSPLUS_HELP_5                              = ' X  _ Prune the database by removing characters not seen in X days - default X = 30';
+CENSUSPLUS_HELP_6                              = ' X _ Prune the database by removing all characters not seen in X days from servers other than the one you are currently on. - default X = 0';
 CENSUSPLUS_HELP_7                              = ' _  Will display info that matches names.';
 CENSUSPLUS_HELP_8                              = ' _  Will list unguilded characters of that level.';
 CENSUSPLUS_HELP_9                              = ' _  Will set the autocensus timer (to X minutes).';
-CENSUSPLUS_HELP_10                             =
-' _ Does Census update of player only.. this is done automatically when /CensusPlus take finishes.';
-CENSUSPLUS_HELP_11                             =
-' _ Toggles stealth mode off/on - disables Verbose and all CensusPlus chat messages.';
-CENSUSPLUS_CMDERR_WHO2NUM                      = 'Who commands can be: who name  _ no numbers in name';
-CENSUSPLUS_CMDERR_WHO2                         =
-'Who commands should be:  who name level  _ no name found, level is optional';
+CENSUSPLUS_HELP_10                             = ' _ Does Census update of player only.. this is done automatically when /CensusPlus take finishes.';
+CENSUSPLUS_HELP_11                             = ' _ Toggles stealth mode off/on - disables Verbose and all CensusPlus chat messages.';
 -- CensusPlus_
 --playerlist.lua
 

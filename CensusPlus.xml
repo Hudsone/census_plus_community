@@ -8,6 +8,7 @@
   <Script file="locales\localization.koKR.lua" />
   <Script file="locales\localization.zhCN.lua" />
   <Script file="locales\localization.ruRU.lua" />
+  <Script file="locales\localization.zhTW.lua" />
   <Script file="realmlist_US.lua" />
   <Script file="realmlist_EU.lua" />
   <Script file="CensusPlus.lua" />
