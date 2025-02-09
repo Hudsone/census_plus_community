@@ -2053,28 +2053,8 @@ end
   ]]
 
 function CensusPlus_DoPurge()
-  if (CensusPlus_Database['Servers'] ~= nil) then
-    CensusPlus_Database['Servers'] = nil;
-  end
-  CensusPlus_Database['Servers'] = {};
+  CPp.DatabaseOperation.Purge()
   CensusPlus_UpdateView();
-  --	CensusPlus_Msg(CENSUSPLUS_PURGEMSG);
-
-  if (CensusPlus_Database['Guilds'] ~= nil) then
-    CensusPlus_Database['Guilds'] = nil;
-  end
-  CensusPlus_Database['Guilds'] = {};
-
-  if (CensusPlus_Database['TimesPlus'] ~= nil) then
-    CensusPlus_Database['TimesPlus'] = nil;
-  end
-  CensusPlus_Database['TimesPlus'] = {};
-
-  if (CensusPlus_Profile ~= nil) then
-    CensusPlus_Profile = nil;
-  end
-  CensusPlus_Profile = {};
-
   if (not (CPp.FirstLoad == true)) then
     CensusPlus_Msg(CENSUSPLUS_PURGEDALL)
   end

@@ -13,6 +13,7 @@
   <Script file="realmlist_EU.lua" />
   <Script file="CensusNormalization.lua" />
   <Script file="CensusPlus.lua" />
+  <Script file="CensusDatabase.lua" />
   <Frame name="CensusPlusVersionTagTemplate"
          mixin="CensusPlusVersionTagMixin"
          virtual="true">
