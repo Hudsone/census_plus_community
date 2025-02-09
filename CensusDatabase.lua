@@ -24,6 +24,17 @@ local CPp = addon_tableID
 CPp.DatabaseOperation = {}
 local lib = CPp.DatabaseOperation
 
+---Initializes the Census data.
+function lib.Initialize()
+  if (CensusPlus_Database['Servers'] == nil) then
+    CensusPlus_Database['Servers'] = {};
+  end
+
+  if (CensusPlus_Database['TimesPlus'] == nil) then
+    CensusPlus_Database['TimesPlus'] = {};
+  end
+end
+
 ---Purges the Census data.
 function lib.Purge()
   if (CensusPlus_Database['Servers'] ~= nil) then

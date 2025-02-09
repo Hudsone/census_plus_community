@@ -2811,16 +2811,10 @@ end
   ]]
 
 function CensusPlus_InitializeVariables()
-  if (CensusPlus_Database['Servers'] == nil) then
-    CensusPlus_Database['Servers'] = {};
-  end
+  CPp.DatabaseOperation.Initialize()
 
   if (CensusPlus_Database['Times'] ~= nil) then
     CensusPlus_Database['Times'] = nil;
-  end
-
-  if (CensusPlus_Database['TimesPlus'] == nil) then
-    CensusPlus_Database['TimesPlus'] = {};
   end
 
   --
