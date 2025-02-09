@@ -11,6 +11,7 @@
   <Script file="locales\localization.zhTW.lua" />
   <Script file="realmlist_US.lua" />
   <Script file="realmlist_EU.lua" />
+  <Script file="CensusNormalization.lua" />
   <Script file="CensusPlus.lua" />
   <Frame name="CensusPlusVersionTagTemplate"
          mixin="CensusPlusVersionTagMixin"
