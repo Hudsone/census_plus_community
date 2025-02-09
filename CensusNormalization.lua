@@ -19,10 +19,10 @@
 		Foundation, Inc., 52 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
 
-local _, addon_tableID     = ...
-local CPp                  = addon_tableID
-CPp.Normalization          = {}
-local NLZN                 = CPp.Normalization
+local _, addon_tableID = ...
+local CPp              = addon_tableID
+CPp.Normalization      = {}
+local NLZN             = CPp.Normalization
 
 if IntellisenseTrick_ExposeGlobal then
   Normalization = NLZN
@@ -161,6 +161,7 @@ T[NLZN.RACE.EARTHEN]       = CENSUSPLUS_EARTHEN
 ---
 ---Example: N('Druide') //--> 'DRUID'
 ---@param translatedString string Locale aware string.
+---@return string
 function CPp.Normalization.N(translatedString)
   local normalized = N[translatedString]
   if not normalized then
@@ -173,9 +174,11 @@ end
 ---
 ---Example: T('DRUID') //--> 'Druide'
 ---@param normalizedString any
+---@return string
 function CPp.Normalization.T(normalizedString)
   local translatedString = T[normalizedString]
   if not translatedString then
+    normalizedString = normalizedString and normalizedString or 'nil'
     error('Unknown string "' .. normalizedString .. '"')
   end
   return translatedString

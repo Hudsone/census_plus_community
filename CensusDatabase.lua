@@ -70,14 +70,13 @@ end
 
 ---Records a character to Census data.
 ---@param realm string The NORMALIZED realm name.
----@param faction string "englishFaction" from the Blizzard API.
----@param race RACE
----@param class CLASS
----@param name any
----@param level any
----@param guild any
----@param guildrealm any
-function lib.Record(realm, faction, race, class, name, level, guild, guildrealm)
+---@param data SightingData The queried character data.
+---@return boolean isNew Whether this data is seen first time.
+function lib.Record(realm, data)
+  local faction = data.faction
+  local race = data.race
+  local class = data.class
+  local name = data.name
   local censusData = CensusPlus_Database['Servers']
   local realmDatabase = censusData[realm];
   if (realmDatabase == nil) then
@@ -99,13 +98,16 @@ function lib.Record(realm, faction, race, class, name, level, guild, guildrealm)
     raceDatabase[class] = {};
     classDatabase = raceDatabase[class];
   end
+  local isNew = false
   local entry = classDatabase[name];
   if (entry == nil) then
+    isNew = true
     classDatabase[name] = {};
     entry = classDatabase[name];
   end
-  entry[1] = level;
-  entry[2] = guild;
-  entry[3] = guildrealm
+  entry[1] = data.level;
+  entry[2] = data.guild;
+  entry[3] = data.guildrealm
   entry[4] = CensusPlus_DetermineServerDate();
+  return isNew
 end

@@ -195,128 +195,128 @@ g_TempCount = {									-- table of tables  realm, name, class
 
 --]]
 --local --global for PTR testing
-CPp.VRealms                              = {}; -- Table for membership of realms in Virtual Realm
+CPp.VRealms                             = {}; -- Table for membership of realms in Virtual Realm
 --local --global for PTR testing
-CensusPlus_JobQueue.g_TempCount          = {};
-CPp.ConnectedRealmsButton                = 0;   -- Signals which member realm in connected realms is selected for guild info display
+CensusPlus_JobQueue.g_TempCount         = {};
+CPp.ConnectedRealmsButton               = 0;   -- Signals which member realm in connected realms is selected for guild info display
 
-CPp.GuildSelected                        = nil; -- Search criteria: Currently selected guild, 0 indicates none
-CPp.RaceSelected                         = 0;   -- Search criteria: Currently selected race, 0 indicates none
-CPp.ClassSelected                        = 0;   -- Search criteria: Currently selected class, 0 indicates none
-CPp.LevelSelected                        = 0;
-local current_realm                      = 0;
+CPp.GuildSelected                       = nil; -- Search criteria: Currently selected guild, 0 indicates none
+CPp.RaceSelected                        = 0;   -- Search criteria: Currently selected race, 0 indicates none
+CPp.ClassSelected                       = 0;   -- Search criteria: Currently selected class, 0 indicates none
+CPp.LevelSelected                       = 0;
+local current_realm                     = 0;
 
-local g_LastOnUpdateTime                 = 0;     -- Last time OnUpdate was called
-local g_WaitingForWhoUpdate              = false; -- Are we waiting for a who update event?
+local g_LastOnUpdateTime                = 0;     -- Last time OnUpdate was called
+local g_WaitingForWhoUpdate             = false; -- Are we waiting for a who update event?
 
-local g_factionGroup                     =
-'Neutral'                                         -- Faction of character running census. used to select/verify correct faction of race
+local g_factionGroup                    =
+'Neutral'                                        -- Faction of character running census. used to select/verify correct faction of race
 
-local g_WhoAttempts                      = 0;     -- Counter for detecting stuck who results
-local g_MiniOnStart                      = 1;     -- Flag to have the mini-censusP displayed on startup
+local g_WhoAttempts                     = 0;     -- Counter for detecting stuck who results
+local g_MiniOnStart                     = 1;     -- Flag to have the mini-censusP displayed on startup
 
-local g_CompleteCensusStarted            = false; -- Flag for counter
-local g_TakeHour                         = 0;     -- Our timing hour
-local g_ResetHour                        = true;  -- Rest hour
-local g_VariablesLoaded                  = false; -- flag to tell us if vars are loaded
-CPp.FirstLoad                            = false  -- Flag to handle (hide) various database rebuild messages on initial database creation
-local g_FirstRun                         = true;
-local whoquery_answered                  = false;
-local whoquery_active                    = false
-CPp.LastCensusRun                        = time() -- (CPp.AutoStartTrigger * 60)	--  timer used if auto census is turned on
-CPp.LastManualWho                        = time()
+local g_CompleteCensusStarted           = false; -- Flag for counter
+local g_TakeHour                        = 0;     -- Our timing hour
+local g_ResetHour                       = true;  -- Rest hour
+local g_VariablesLoaded                 = false; -- flag to tell us if vars are loaded
+CPp.FirstLoad                           = false  -- Flag to handle (hide) various database rebuild messages on initial database creation
+local g_FirstRun                        = true;
+local whoquery_answered                 = false;
+local whoquery_active                   = false
+CPp.LastCensusRun                       = time() -- (CPp.AutoStartTrigger * 60)	--  timer used if auto census is turned on
+CPp.LastManualWho                       = time()
 
-local g_Pre_FriendsFrameOnHideOverride   = nil; --  override for friend's frame to stop the close window sound
-local g_Pre_FriendsFrameOnShowOverride   = nil; --  override for friend's frame to stop the close window sound
-local g_Pre_WhoList_UpdateOverride       = nil; --  override for friend's frame to stop the close window sound
-local g_Pre_WhoHandler                   = nil; --  override for submiting a who
-local CP_Pre_OnEvent                     = nil;
-local g_Pre_FriendsFrame_Update          = nil;
-local CP_updatingGuild                   = nil;
-local g_CurrentlyInBG                    = false;
-local g_CurrentlyInBG_Msg                = false;
-local g_InternalSearchName               = nil;
-local g_InternalSearchLevel              = nil;
-local g_InternalSearchCount              = 0;
-CPp.EnableProfiling                      = false;
-local CP_profiling_timerstart            = 0
-local CP_profiling_timediff              = 0
-local g_CensusPlus_StartTime             = 0;
-local g_CensusWhoOverrideMsg             = nil;
-local g_WaitingForOverrideUpdate         = false;
-local g_ProblematicMessageShown          = false;
-local g_WhoLibLoaded                     = false;
-local g_PratLoaded                       = false;
-local g_WhoLibSubvert                    = nil;
-local g_WhoLibSendWhoSubvert             = nil;
-local g_whoLibResultSubvert              = nil;
-local g_WhoLibChatSubvert                = nil;
-local g_WhoLibAskWhoSubvert              = nil;
+local g_Pre_FriendsFrameOnHideOverride  = nil; --  override for friend's frame to stop the close window sound
+local g_Pre_FriendsFrameOnShowOverride  = nil; --  override for friend's frame to stop the close window sound
+local g_Pre_WhoList_UpdateOverride      = nil; --  override for friend's frame to stop the close window sound
+local g_Pre_WhoHandler                  = nil; --  override for submiting a who
+local CP_Pre_OnEvent                    = nil;
+local g_Pre_FriendsFrame_Update         = nil;
+local CP_updatingGuild                  = nil;
+local g_CurrentlyInBG                   = false;
+local g_CurrentlyInBG_Msg               = false;
+local g_InternalSearchName              = nil;
+local g_InternalSearchLevel             = nil;
+local g_InternalSearchCount             = 0;
+CPp.EnableProfiling                     = false;
+local CP_profiling_timerstart           = 0
+local CP_profiling_timediff             = 0
+local g_CensusPlus_StartTime            = 0;
+local g_CensusWhoOverrideMsg            = nil;
+local g_WaitingForOverrideUpdate        = false;
+local g_ProblematicMessageShown         = false;
+local g_WhoLibLoaded                    = false;
+local g_PratLoaded                      = false;
+local g_WhoLibSubvert                   = nil;
+local g_WhoLibSendWhoSubvert            = nil;
+local g_whoLibResultSubvert             = nil;
+local g_WhoLibChatSubvert               = nil;
+local g_WhoLibAskWhoSubvert             = nil;
 
 --  Battleground info
-CENSUSPLUS_CURRENT_BATTLEFIELD_QUEUES    = {};
+CENSUSPLUS_CURRENT_BATTLEFIELD_QUEUES   = {};
 
-local g_AccumulatedPruneData             = {};
+local g_AccumulatedPruneData            = {};
 
-local g_SupportedRaceCount               = 14;
-local g_SupportedClassCount              = 13;
-local g_RaceClassList                    = {}; -- Used to pick the right icon
-g_RaceClassList[CENSUSPLUS_DRUID]        = 10;
-g_RaceClassList[CENSUSPLUS_HUNTER]       = 11;
-g_RaceClassList[CENSUSPLUS_MAGE]         = 12;
-g_RaceClassList[CENSUSPLUS_PRIEST]       = 13;
-g_RaceClassList[CENSUSPLUS_ROGUE]        = 14;
-g_RaceClassList[CENSUSPLUS_WARLOCK]      = 15;
-g_RaceClassList[CENSUSPLUS_WARRIOR]      = 16;
-g_RaceClassList[CENSUSPLUS_SHAMAN]       = 17;
-g_RaceClassList[CENSUSPLUS_PALADIN]      = 18;
-g_RaceClassList[CENSUSPLUS_DEATHKNIGHT]  = 30;
-g_RaceClassList[CENSUSPLUS_MONK]         = 19;
-g_RaceClassList[CENSUSPLUS_DEMONHUNTER]  = 35;
+local g_SupportedRaceCount              = 14;
+local g_SupportedClassCount             = 13;
+local g_RaceClassList                   = {}; -- Used to pick the right icon
+g_RaceClassList[NLZN.CLASS.DRUID]       = 10;
+g_RaceClassList[NLZN.CLASS.HUNTER]      = 11;
+g_RaceClassList[NLZN.CLASS.MAGE]        = 12;
+g_RaceClassList[NLZN.CLASS.PRIEST]      = 13;
+g_RaceClassList[NLZN.CLASS.ROGUE]       = 14;
+g_RaceClassList[NLZN.CLASS.WARLOCK]     = 15;
+g_RaceClassList[NLZN.CLASS.WARRIOR]     = 16;
+g_RaceClassList[NLZN.CLASS.SHAMAN]      = 17;
+g_RaceClassList[NLZN.CLASS.PALADIN]     = 18;
+g_RaceClassList[NLZN.CLASS.DEATHKNIGHT] = 30;
+g_RaceClassList[NLZN.CLASS.MONK]        = 19;
+g_RaceClassList[NLZN.CLASS.DEMONHUNTER] = 35;
 
-g_RaceClassList[CENSUSPLUS_DWARF]        = 20;
-g_RaceClassList[CENSUSPLUS_GNOME]        = 21;
-g_RaceClassList[CENSUSPLUS_HUMAN]        = 22;
-g_RaceClassList[CENSUSPLUS_NIGHTELF]     = 23;
-g_RaceClassList[CENSUSPLUS_ORC]          = 24;
-g_RaceClassList[CENSUSPLUS_TAUREN]       = 25;
-g_RaceClassList[CENSUSPLUS_TROLL]        = 26;
-g_RaceClassList[CENSUSPLUS_UNDEAD]       = 27;
-g_RaceClassList[CENSUSPLUS_DRAENEI]      = 28;
-g_RaceClassList[CENSUSPLUS_BLOODELF]     = 29;
-g_RaceClassList[CENSUSPLUS_WORGEN]       = 32;
-g_RaceClassList[CENSUSPLUS_GOBLIN]       = 31;
-g_RaceClassList[CENSUSPLUS_HPANDAREN]    = 33; -- Male icon of Ji Firepaw (Houjin faction) Horde
-g_RaceClassList[CENSUSPLUS_APANDAREN]    = 34; -- Female icon of Aysa Cloudsinger (Tushui faction) Alliance
-g_RaceClassList[CENSUSPLUS_HIGHMOUNTAIN] = 36; --BfA
-g_RaceClassList[CENSUSPLUS_NIGHTBORNE]   = 37; --BfA
-g_RaceClassList[CENSUSPLUS_MAGHAR]       = 42; --BfA
-g_RaceClassList[CENSUSPLUS_ZANDALARI]    = 38; --BfA
-g_RaceClassList[CENSUSPLUS_LIGHTFORGED]  = 39; --BfA
-g_RaceClassList[CENSUSPLUS_VOIDELF]      = 40; --BfA
-g_RaceClassList[CENSUSPLUS_DARKIRON]     = 41; --BfA
-g_RaceClassList[CENSUSPLUS_KULTIRAN]     = 43; --BfA
-g_RaceClassList[CENSUSPLUS_VULPERA]      = 44; --BfA8.3
-g_RaceClassList[CENSUSPLUS_MECHAGNOME]   = 45; --BfA8.3
-g_RaceClassList[CENSUSPLUS_EARTHEN]      = 46; --11.0
+g_RaceClassList[NLZN.RACE.DWARF]        = 20;
+g_RaceClassList[NLZN.RACE.GNOME]        = 21;
+g_RaceClassList[NLZN.RACE.HUMAN]        = 22;
+g_RaceClassList[NLZN.RACE.NIGHTELF]     = 23;
+g_RaceClassList[NLZN.RACE.ORC]          = 24;
+g_RaceClassList[NLZN.RACE.TAUREN]       = 25;
+g_RaceClassList[NLZN.RACE.TROLL]        = 26;
+g_RaceClassList[NLZN.RACE.UNDEAD]       = 27;
+g_RaceClassList[NLZN.RACE.DRAENEI]      = 28;
+g_RaceClassList[NLZN.RACE.BLOODELF]     = 29;
+g_RaceClassList[NLZN.RACE.WORGEN]       = 32;
+g_RaceClassList[NLZN.RACE.GOBLIN]       = 31;
+g_RaceClassList[NLZN.RACE.PANDAREN]     = 33; -- Male icon of Ji Firepaw (Houjin faction) Horde
+g_RaceClassList[NLZN.RACE.PANDAREN]     = 34; -- Female icon of Aysa Cloudsinger (Tushui faction) Alliance
+g_RaceClassList[NLZN.RACE.HIGHMOUNTAIN] = 36; --BfA
+g_RaceClassList[NLZN.RACE.NIGHTBORNE]   = 37; --BfA
+g_RaceClassList[NLZN.RACE.MAGHAR]       = 42; --BfA
+g_RaceClassList[NLZN.RACE.ZANDALARI]    = 38; --BfA
+g_RaceClassList[NLZN.RACE.LIGHTFORGED]  = 39; --BfA
+g_RaceClassList[NLZN.RACE.VOIDELF]      = 40; --BfA
+g_RaceClassList[NLZN.RACE.DARKIRON]     = 41; --BfA
+g_RaceClassList[NLZN.RACE.KULTIRAN]     = 43; --BfA
+g_RaceClassList[NLZN.RACE.VULPERA]      = 44; --BfA8.3
+g_RaceClassList[NLZN.RACE.MECHAGNOME]   = 45; --BfA8.3
+g_RaceClassList[NLZN.RACE.EARTHEN]      = 46; --11.0
 
-CensusPlus_JobQueue.g_TimeDatabase       = {}; -- Time database
+CensusPlus_JobQueue.g_TimeDatabase      = {}; -- Time database
 local function CensusPlus_Zero_g_TimeDatabase()
   CensusPlus_JobQueue.g_TimeDatabase                         = nil;
   CensusPlus_JobQueue.g_TimeDatabase                         = {};
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DRUID]       = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_HUNTER]      = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MAGE]        = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_PRIEST]      = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_ROGUE]       = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_WARLOCK]     = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_WARRIOR]     = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_SHAMAN]      = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_PALADIN]     = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEATHKNIGHT] = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MONK]        = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEMONHUNTER] = 0;
-  CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_EVOKER]      = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DRUID]       = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.HUNTER]      = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.MAGE]        = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.PRIEST]      = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.ROGUE]       = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.WARLOCK]     = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.WARRIOR]     = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.SHAMAN]      = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.PALADIN]     = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DEATHKNIGHT] = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.MONK]        = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DEMONHUNTER] = 0;
+  CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.EVOKER]      = 0;
 end
 CensusPlus_Zero_g_TimeDatabase();
 
@@ -522,37 +522,37 @@ function CensusPlus_GetFactionRaces(faction)
   local ret = {};
   if (faction == CENSUSPlus_HORDE) then
     ret = {
-      CENSUSPLUS_ORC,
-      CENSUSPLUS_TAUREN,
-      CENSUSPLUS_TROLL,
-      CENSUSPLUS_UNDEAD,
-      CENSUSPLUS_BLOODELF,
-      CENSUSPLUS_GOBLIN,
-      CENSUSPLUS_HPANDAREN,
-      CENSUSPLUS_HIGHMOUNTAIN,
-      CENSUSPLUS_NIGHTBORNE,
-      CENSUSPLUS_MAGHAR,
-      CENSUSPLUS_ZANDALARI,
-      CENSUSPLUS_VULPERA,
-      CENSUSPLUS_DRACTHYR,
-      CENSUSPLUS_EARTHEN,
+      NLZN.RACE.ORC,
+      NLZN.RACE.TAUREN,
+      NLZN.RACE.TROLL,
+      NLZN.RACE.UNDEAD,
+      NLZN.RACE.BLOODELF,
+      NLZN.RACE.GOBLIN,
+      NLZN.RACE.PANDAREN,
+      NLZN.RACE.HIGHMOUNTAIN,
+      NLZN.RACE.NIGHTBORNE,
+      NLZN.RACE.MAGHAR,
+      NLZN.RACE.ZANDALARI,
+      NLZN.RACE.VULPERA,
+      NLZN.RACE.DRACTHYR,
+      NLZN.RACE.EARTHEN,
     };
   elseif (faction == CENSUSPlus_ALLIANCE) then
     ret = {
-      CENSUSPLUS_DWARF,
-      CENSUSPLUS_GNOME,
-      CENSUSPLUS_HUMAN,
-      CENSUSPLUS_NIGHTELF,
-      CENSUSPLUS_DRAENEI,
-      CENSUSPLUS_WORGEN,
-      CENSUSPLUS_APANDAREN,
-      CENSUSPLUS_LIGHTFORGED,
-      CENSUSPLUS_VOIDELF,
-      CENSUSPLUS_DARKIRON,
-      CENSUSPLUS_KULTIRAN,
-      CENSUSPLUS_MECHAGNOME,
-      CENSUSPLUS_DRACTHYR,
-      CENSUSPLUS_EARTHEN,
+      NLZN.RACE.DWARF,
+      NLZN.RACE.GNOME,
+      NLZN.RACE.HUMAN,
+      NLZN.RACE.NIGHTELF,
+      NLZN.RACE.DRAENEI,
+      NLZN.RACE.WORGEN,
+      NLZN.RACE.PANDAREN,
+      NLZN.RACE.LIGHTFORGED,
+      NLZN.RACE.VOIDELF,
+      NLZN.RACE.DARKIRON,
+      NLZN.RACE.KULTIRAN,
+      NLZN.RACE.MECHAGNOME,
+      NLZN.RACE.DRACTHYR,
+      NLZN.RACE.EARTHEN,
     };
   end
   return ret;
@@ -569,35 +569,35 @@ function CensusPlus_GetFactionClasses(faction)
   local ret = {};
   if (faction == CENSUSPlus_HORDE) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_DEMONHUNTER,
-      CENSUSPLUS_DEATHKNIGHT,
-      CENSUSPLUS_EVOKER,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.DEMONHUNTER,
+      NLZN.CLASS.DEATHKNIGHT,
+      NLZN.CLASS.EVOKER,
     };
   elseif (faction == CENSUSPlus_ALLIANCE) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_DEMONHUNTER,
-      CENSUSPLUS_DEATHKNIGHT,
-      CENSUSPLUS_EVOKER,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.DEMONHUNTER,
+      NLZN.CLASS.DEATHKNIGHT,
+      NLZN.CLASS.EVOKER,
     };
   end
   return ret;
@@ -610,324 +610,311 @@ end
 
 local function GetRaceClasses(race)
   local ret = {};
-  if (race == CENSUSPLUS_ORC) then
+  if (race == NLZN.RACE.ORC) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-    --		ret = {CENSUSPLUS_WARRIOR, CENSUSPLUS_HUNTER, CENSUSPLUS_ROGUE, CENSUSPLUS_MAGE, CENSUSPLUS_SHAMAN, CENSUSPLUS_WARLOCK, CENSUSPLUS_DEATHKNIGHT, CENSUSPLUS_MONK};
-  elseif (race == CENSUSPLUS_TAUREN) then
+    --		ret = {NLZN.CLASS.WARRIOR, CENSUSPLUS_HUNTER, CENSUSPLUS_ROGUE, CENSUSPLUS_MAGE, CENSUSPLUS_SHAMAN, CENSUSPLUS_WARLOCK, CENSUSPLUS_DEATHKNIGHT, CENSUSPLUS_MONK};
+  elseif (race == NLZN.RACE.TAUREN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_TROLL) then
+  elseif (race == NLZN.RACE.TROLL) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_UNDEAD) then
+  elseif (race == NLZN.RACE.UNDEAD) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_DWARF) then
+  elseif (race == NLZN.RACE.DWARF) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_GNOME) then
+  elseif (race == NLZN.RACE.GNOME) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_HUMAN) then
-    --		ret = {CENSUSPLUS_WARRIOR, CENSUSPLUS_HUNTER, CENSUSPLUS_PALADIN, CENSUSPLUS_ROGUE, CENSUSPLUS_PRIEST, CENSUSPLUS_MAGE, CENSUSPLUS_WARLOCK, CENSUSPLUS_DEATHKNIGHT, CENSUSPLUS_MONK};
+  elseif (race == NLZN.RACE.HUMAN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_NIGHTELF) then
+  elseif (race == NLZN.RACE.NIGHTELF) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEMONHUNTER,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEMONHUNTER,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_BLOODELF) then
+  elseif (race == NLZN.RACE.BLOODELF) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEMONHUNTER,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEMONHUNTER,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_DRAENEI) then
+  elseif (race == NLZN.RACE.DRAENEI) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_WORGEN) then
+  elseif (race == NLZN.RACE.WORGEN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_GOBLIN) then
+  elseif (race == NLZN.RACE.GOBLIN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_APANDAREN) then
+  elseif (race == NLZN.RACE.PANDAREN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_HPANDAREN) then
+  elseif (race == NLZN.RACE.HIGHMOUNTAIN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_HIGHMOUNTAIN) then
+  elseif (race == NLZN.RACE.NIGHTBORNE) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_NIGHTBORNE) then
+  elseif (race == NLZN.RACE.MAGHAR) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_MAGHAR) then
+  elseif (race == NLZN.RACE.ZANDALARI) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_ZANDALARI) then
+  elseif (race == NLZN.RACE.LIGHTFORGED) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_LIGHTFORGED) then
+  elseif (race == NLZN.RACE.VOIDELF) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_VOIDELF) then
+  elseif (race == NLZN.RACE.DARKIRON) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_DARKIRON) then
+  elseif (race == NLZN.RACE.KULTIRAN) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.DRUID,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_KULTIRAN) then
+  elseif (race == NLZN.RACE.VULPERA) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_DRUID,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_VULPERA) then
+  elseif (race == NLZN.RACE.MECHAGNOME) then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.MONK,
+      NLZN.CLASS.DEATHKNIGHT,
     };
-  elseif (race == CENSUSPLUS_MECHAGNOME) then
+  elseif race == NLZN.RACE.DRACTHYR then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_MONK,
-      CENSUSPLUS_DEATHKNIGHT,
-    };
-  elseif race == CENSUSPLUS_DRACTHYR then
-    ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_EVOKER,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.EVOKER,
     }
-  elseif race == CENSUSPLUS_EARTHEN then
+  elseif race == NLZN.RACE.EARTHEN then
     ret = {
-      CENSUSPLUS_WARRIOR,
-      CENSUSPLUS_HUNTER,
-      CENSUSPLUS_MAGE,
-      CENSUSPLUS_ROGUE,
-      CENSUSPLUS_PRIEST,
-      CENSUSPLUS_WARLOCK,
-      CENSUSPLUS_PALADIN,
-      CENSUSPLUS_SHAMAN,
-      CENSUSPLUS_MONK,
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.PALADIN,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
     }
   end
   return ret;
@@ -1282,6 +1269,9 @@ local function shuffled_numbers(n)
   return numbers
 end
 
+---Callback to process the Who results.
+---@param query string
+---@param result WhoInfo[]
 function CP_ProcessWhoEvent(query, result)
   local complete = (#result < MAX_WHOS_FROM_SERVER)
   if (CPp.IsCensusPlusInProgress ~= true) then
@@ -1291,13 +1281,7 @@ function CP_ProcessWhoEvent(query, result)
   local numWhoResults = 0;
   local cpdb_complete_flag = ''
   whoquery_answered = true
-  if (complete) then
-    cpdb_complete_flag = '' -- :complete"
-    numWhoResults = #result
-  else
-    cpdb_complete_flag = '' -- :too many"
-    numWhoResults = MAX_WHO_RESULTS
-  end
+  numWhoResults = #result
 
   if (g_Verbose == true) then
     CensusPlus_Msg(CENSUSPLUS_WHOQUERY ..
@@ -2392,12 +2376,12 @@ function CensusPlus_CreateWhoText(job)
   local whoText = '';
   local race = job.m_Race;
   if (race ~= nil) then
-    whoText = whoText .. ' r-\"' .. race .. '\"';
+    whoText = whoText .. ' r-\"' .. NLZN.T(race) .. '\"';
   end
 
   local class = job.m_Class;
   if (class ~= nil) then
-    whoText = whoText .. ' c-\"' .. class .. '\"';
+    whoText = whoText .. ' c-\"' .. NLZN.T(class) .. '\"';
   end
 
   local letter = job.m_Letter;
@@ -2407,7 +2391,7 @@ function CensusPlus_CreateWhoText(job)
 
   local minLevel = tostring(job.m_MinLevel);
   if (minLevel == nil) then
-    minLevel = 1;
+    minLevel = '1';
   end
   local maxLevel = job.m_MaxLevel;
   if (maxLevel == nil) then
@@ -2681,11 +2665,7 @@ function CensusPlus_ProcessTarget(unit)
 		end	
 --]]
   sightingData.guildrealm = CPp.CensusPlusLocale .. sightingData.guildrealm
-  CPp.DatabaseOperation.Record(realmName, sightingData.faction,
-                               sightingData.race, sightingData.class,
-                               sightingData.name,
-                               sightingData.level, sightingData.guild,
-                               sightingData.guildrealm)
+  CPp.DatabaseOperation.Record(realmName, sightingData)
 end
 
 --[[	-- Gather targeting data
@@ -3254,18 +3234,18 @@ function CensusPlus_DoTimeCounts()
         local hour, minute = GetGameTime();
         --					CensusPlus_Database["TimesPlus"][realmData][factionData]["" .. hour .. ""] = CensusPlus_JobQueue.g_TimeDatabase;
         CensusPlus_Database['TimesPlus'][MemberRealm][factionGroup] =
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DRUID] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_HUNTER] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MAGE] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_PRIEST] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_ROGUE] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_WARLOCK] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_WARRIOR] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_SHAMAN] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_PALADIN] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEATHKNIGHT] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MONK] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEMONHUNTER] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DRUID] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.HUNTER] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.MAGE] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.PRIEST] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.ROGUE] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.WARLOCK] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.WARRIOR] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.SHAMAN] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.PALADIN] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DEATHKNIGHT] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.MONK] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DEMONHUNTER] .. '&' ..
             CensusPlus_WHOPROCESSOR ..
             ':' ..
             CensusPlus_JobQueue.g_NumNewCharacters ..
@@ -3281,18 +3261,18 @@ function CensusPlus_DoTimeCounts()
             '&' .. hour .. ':' .. minute .. ':00';
 
         CensusPlus_Database['TimesPlus'][MemberRealm][factionGroup][TimeDataTime] =
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DRUID] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_HUNTER] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MAGE] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_PRIEST] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_ROGUE] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_WARLOCK] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_WARRIOR] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_SHAMAN] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_PALADIN] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEATHKNIGHT] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_MONK] .. '&' ..
-            CensusPlus_JobQueue.g_TimeDatabase[CENSUSPLUS_DEMONHUNTER];
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DRUID] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.HUNTER] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.MAGE] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.PRIEST] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.ROGUE] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.WARLOCK] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.WARRIOR] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.SHAMAN] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.PALADIN] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DEATHKNIGHT] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.MONK] .. '&' ..
+            CensusPlus_JobQueue.g_TimeDatabase[NLZN.CLASS.DEMONHUNTER];
       end
     end
   end
@@ -3450,10 +3430,101 @@ function CensusPlus_SafeCheck(param)
   end
 end
 
---[[	-- Add the contents of the who results to the database
---
+---Makes a sighting data from the who info.
+---@param whoInfo WhoInfo
+---@return SightingData
+local function makeSightingData(whoInfo)
+  ---@type SightingData
+  local data = {
+    name = '',
+    realm = '',
+    relationship = nil,
+    race = NLZN.RACE.UNSPECIFIED,
+    level = whoInfo.level,
+    class = NLZN.CLASS.UNSPECIFIED,
+    guild = '',
+    guildrealm = '',
+    faction = UnitFactionGroup('player'),
+  }
+  local tmpNmst = nil
+  local tmpGldst = nil
+  local name = whoInfo.fullName
+
+  --[[ Note:  name and realm
+      if character tracked is on same realm as player character then name is returned as Name only
+      if character tracked is on a non-local connected realm then name is returned as Name-Realm
   ]]
 
+  tmpNmst, _ = string.find(name, '-');
+  if (tmpNmst) then
+    data.realm = string.sub(name, tmpNmst + 1);
+    data.name = string.sub(name, 1, tmpNmst - 1);
+  else
+    data.realm = GetRealmName(); -- this shouldn't happen except where Blizzard doesn't encode relationships  {sigh and they didn't}
+    data.name = name
+  end
+  -- 5.4
+  local guild = whoInfo.fullGuildName
+  --[[ Note:  guild and realm
+      if character's guild tracked is on same realm as player character then guild is returned as guild only
+      if character's guild tracked is on a non-local connected realm then guild is returned as guild-Realm
+  ]]
+  if (HortonBug == true) then
+    says('Who returned ' ..
+      whoInfo.fullName .. '  Guild = ' .. whoInfo.fullGuildName);
+  end
+  if ((guild ~= nil) and (guild ~= '')) then
+    local guildName =
+    '' -- defined if valid guild returned from who call otherwise nil.. am I sure about this?
+    --[[ invalid coding.. GetGuildInfo only works with (unit) not ("name") as indicated at www.wowprogramming.com sigh
+      guildName,guildRankName, guildRankIndex, guildRealm = GetGuildInfo(whoInfo.Name)  -- I'm assuming this will be  guild, guildrealm  and not guild-realm, guildrealm
+    ]]
+    tmpGldst, _ = string.find(guild, '-');
+    if (tmpGldst ~= nil) then
+      data.guildrealm = string.sub(guild, tmpGldst + 1);
+      data.guild = string.sub(guild, 1, tmpGldst - 1);
+    else
+      data.guildrealm = GetRealmName();
+      data.guild = guild
+    end
+    if (HortonBug == true) then
+      says('guild realm =  ' .. data.guildrealm);
+    end
+  else
+    data.guild = '';
+    data.guildrealm = '';
+  end
+  local race = whoInfo.raceStr
+  if (CENSUSPlusFemale[race] ~= nil) then
+    race = CENSUSPlusFemale[race];
+  end
+  data.race = NLZN.N(race)
+  local class = whoInfo.classStr
+  if (CENSUSPlusFemale[class] ~= nil) then
+    class = CENSUSPlusFemale[class];
+  end
+  data.class = NLZN.N(class)
+
+  --[[ PTR testing modifications
+    Blizzard has odd naming allowances in PTR realms
+    name (US) or name (EU)  ditto for guild names
+
+--]]
+  data.realm = PTR_Color_ProblemRealmGuilds_check(data.realm);
+  data.name = PTR_Color_ProblemNames_check(data.name);
+  if ((data.guild ~= nil) and (data.guild ~= '')) then
+    data.guild = PTR_Color_ProblemRealmGuilds_check(data.guild);
+  end
+  if ((data.guildrealm ~= nil) and (data.guildrealm ~= '')) then
+    data.guildrealm = PTR_Color_ProblemRealmGuilds_check(data.guildrealm);
+    data.guildrealm = CPp.CensusPlusLocale .. data.guildrealm;
+  end
+  return data
+end
+
+---Adds the contents of the who results to the database.
+---@param result WhoInfo[]
+---@param numWhoResults integer
 function CensusPlus_ProcessWhoResults(result, numWhoResults)
   --
   --  If we are in a BG th.en stop a census
@@ -3489,185 +3560,29 @@ new process no assumption. process realm, then faction, level, race,class
     CensusPlus_Msg(format(CENSUSPLUS_PROCESSING, numWhoResults));
   end
 
-  local name = ''
-  --5.4
-  local realm = ''
-  --
-  local guild = ''
-  --5.4
-  local guildRealm = ''
-  --	
-  local level = ''
-  local race = ''
-  local class = ''
-  local zone = ''
   --	local relate = ""
   for i = 1, numWhoResults, 1 do
-    local tmpNmst = nil
-    local tmpNmend = nil
-    local tmpGldst = nil
-    local tmpGldend = nil
-    local relationship = nil
-    name = result[i].Name
-    --[[ Note:  name and realm
-				if character tracked is on same realm as player character then name is returned as Name only
-				if character tracked is on a non-local connected realm then name is returned as Name-Realm
---]]
-
-    --[[			if (relationship == LE_REALM_RELATION_SAME) then
-				realm = GetRealmName();
-				relate = "same server";
-				if (HortonBug == true) then
---				    says("relationship = " .. relationship);
-					says("who returned "..name.." +realm is ".. realm .. " _ " ..relate);
-				end
-			else
---]]
-    tmpNmst, tmpNmend = string.find(result[i].Name, '-');
-    if (tmpNmst) then
-      realm = string.sub(result[i].Name, tmpNmst + 1);
-      name = string.sub(result[i].Name, 1, tmpNmst - 1);
-    else
-      realm = GetRealmName();   -- this shouldn't happen except where Blizzard doesn't encode relationships  {sigh and they didn't}
-    end
-    -- 5.4
-    guild = result[i].Guild
-    --[[ Note:  guild and realm
-				if character's guild tracked is on same realm as player character then guild is returned as guild only
-				if character's guild tracked is on a non-local connected realm then guild is returned as guild-Realm
---]]
-    if (HortonBug == true) then
-      says('Who returned ' .. result[i].Name .. '  Guild = ' .. result[i]
-        .Guild);
-    end
-    if ((guild ~= nil) and (guild ~= '')) then
-      local guildName =
-      ''   -- defined if valid guild returned from who call otherwise nil.. am I sure about this?
-      --[[ invalid coding.. GetGuildInfo only works with (unit) not ("name") as indicated at www.wowprogramming.com sigh
-				guildName,guildRankName, guildRankIndex, guildRealm = GetGuildInfo(result[i].Name)  -- I'm assuming this will be  guild, guildrealm  and not guild-realm, guildrealm
-print(result[i].Name)
---print(unitGUID(result[1].Name))
-print(guild)
---]]
-      --				if (guildName == nil) then
-      tmpGldst, tmpGldend = string.find(result[i].Guild, '-');
-      if (tmpGldst ~= nil) then
-        guildRealm = string.sub(result[i].Guild, tmpGldst + 1);
-        guild = string.sub(result[i].Guild, 1, tmpGldst - 1);
-      else
-        guildRealm = GetRealmName();
-      end
-      if (HortonBug == true) then
-        says('guild realm =  ' .. guildRealm);
-      end
-      --				else
-      --					if (guildRealm == nil) then
-      --						guildRealm = GetRealmName();
-      --					end
-      --				end
-    else
-      guild = '';
-      guildRealm = '';
-    end
-
-    level = result[i].Level
-    race = result[i].Race
-    if (CENSUSPlusFemale[race] ~= nil) then
-      race = CENSUSPlusFemale[race];
-    end
-    class = result[i].Class
-    if (CENSUSPlusFemale[class] ~= nil) then
-      class = CENSUSPlusFemale[class];
-    end
-    zone = result[i].Zone
-
-    --[[ PTR testing modifications
-			Blizzard has odd naming allowances in PTR realms
-			name (US) or name (EU)  ditto for guild names
-
---]]
-    realm = PTR_Color_ProblemRealmGuilds_check(realm);
-    name = PTR_Color_ProblemNames_check(name);
-    if ((guild ~= nil) and (guild ~= '')) then
-      guild = PTR_Color_ProblemRealmGuilds_check(guild);
-    end
-    if ((guildRealm ~= nil) and (guildRealm ~= '')) then
-      guildRealm = PTR_Color_ProblemRealmGuilds_check(guildRealm);
-      guildRealm = CPp.CensusPlusLocale .. guildRealm;
-    end
-    ---				if (HortonBug == true) then
-    ---					s.ays("mod names  "..name.."  realm  " .. realm);
-    ---				end
-
+    local sightingData = makeSightingData(result[i])
     --
     -- Get the portion of the database for this server
     --
-    --5.3	local realmName = CPp.CensusPlusLocale .. GetRealmName();
-    local realmName = CPp.CensusPlusLocale .. realm;
+    local realmName = CPp.CensusPlusLocale .. sightingData.realm;
     VRealmMembership_verifier(realmName);
     -- coalesced realms should not show up here via /who queries.
-
-    local realmDatabase = CensusPlus_Database['Servers'][realmName];
-    if (realmDatabase == nil) then
-      CensusPlus_Database['Servers'][realmName] = {};
-      realmDatabase = CensusPlus_Database['Servers'][realmName];
-    end
 
     --
     -- Get the portion of the database for this faction
     --
-    local factionGroup = UnitFactionGroup('player');
+    local factionGroup = sightingData.faction
     if (factionGroup == nil or factionGroup == 'Neutral') then
       return
     end
 
-    local factionDatabase = realmDatabase[factionGroup];
-    if (factionDatabase == nil) then
-      realmDatabase[factionGroup] = {};
-      factionDatabase = realmDatabase[factionGroup];
-    end
-
-    --
-    -- Get racial database
-    --
-    local raceDatabase = factionDatabase[race];
-    if (raceDatabase == nil) then
-      factionDatabase[race] = {};
-      raceDatabase = factionDatabase[race];
-    end
-
-    --
-    -- Get class database
-    --
-    local classDatabase = raceDatabase[class];
-    if (classDatabase == nil) then
-      raceDatabase[class] = {};
-      classDatabase = raceDatabase[class];
-    end
-
-    --
-    -- Get this player's entry
-    --
-    local entry = classDatabase[name];
-    if (entry == nil) then
-      classDatabase[name] = {};
-      entry = classDatabase[name];
+    if CPp.DatabaseOperation.Record(realmName, sightingData) then
       CensusPlus_JobQueue.g_NumNewCharacters = CensusPlus_JobQueue
           .g_NumNewCharacters + 1;
     end
 
-    --
-    -- Update the information
-    --
-    entry[1] = level;
-    entry[2] = guild;
-    -- 5.4 added
-    entry[3] = guildRealm;
-    --		local hour, minute = GetGameTime();
-    entry[4] = CensusPlus_DetermineServerDate() .. '';
-
-    -- 5.3		g_TempCount[name] = class;
-    -- 5.4  g_TempCount[realm][name] = class;
     local gct_realm = CensusPlus_JobQueue.g_TempCount[realmName];
     if (gct_realm == nil) then
       CensusPlus_JobQueue.g_TempCount[realmName] = {};
@@ -3680,12 +3595,14 @@ print(guild)
       gct_faction = gct_realm[factionGroup];
     end
 
+    local class = sightingData.class
     local gct_class = gct_faction[class];
     if (gct_class == nil) then
       gct_faction[class] = {};
       gct_class = gct_faction[class];
     end
 
+    local name = sightingData.name
     local gct_name = gct_class[name];
     if (gct_name == nil) then
       gct_class[name] = {};
@@ -3992,9 +3909,9 @@ local function getIconTexture(raceClass)
     normalTextureName = 'Interface\\AddOns\\CensusPlus\\Skin\\CensusPlus_' ..
         g_RaceClassList[raceClass];
   else
-    if raceClass == CENSUSPLUS_DRACTHYR then
+    if raceClass == NLZN.RACE.DRACTHYR then
       normalTextureName = 'interface/icons/ui_dracthyr.blp'
-    elseif raceClass == CENSUSPLUS_EVOKER then
+    elseif raceClass == NLZN.CLASS.EVOKER then
       normalTextureName = 'interface/icons/classicon_evoker.blp'
     end
   end
@@ -4764,7 +4681,7 @@ function CensusPlus_OnEnterRace(self, motion) -- referenced by CensusPlus.xml
     local factionGroup = UnitFactionGroup('player');
     local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
     local id = self:GetID();
-    local raceName = thisFactionRaces[id];
+    local raceName = NLZN.T(thisFactionRaces[id]);
     local count = g_RaceCount[id];
     if (count ~= nil) and (g_TotalCount > 0) then
       local percent = floor((count / g_TotalCount) * 100);
