@@ -2417,7 +2417,6 @@ function CensusPlus_DisplayResults()
     end
     realmslisttext = string.sub(realmslisttext, 3)
     ChatFrame1:AddMessage(realmslisttext, 1.0, 0.3, 0.1)
-    ChatFrame1:AddMessage(CENSUSPLUS_UPLOAD, 0.1, 1.0, 1.0);
   end
   CensusPlus_UpdateView();
   CPp.LastCensusRun = time();
