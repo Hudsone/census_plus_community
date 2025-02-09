@@ -24,7 +24,13 @@ local CPp                  = addon_tableID
 CPp.Normalization          = {}
 local NLZN                 = CPp.Normalization
 
+if IntellisenseTrick_ExposeGlobal then
+  Normalization = NLZN
+end
+
+---@enum CLASS
 NLZN.CLASS                 = {
+  UNSPECIFIED = '',
   DRUID = 'DRUID',
   HUNTER = 'HUNTER',
   MAGE = 'MAGE',
@@ -40,7 +46,9 @@ NLZN.CLASS                 = {
   EVOKER = 'EVOKER',
 }
 
+---@enum RACE
 NLZN.RACE                  = {
+  UNSPECIFIED = '',
   DWARF = 'DWARF',
   GNOME = 'GNOME',
   HUMAN = 'HUMAN',

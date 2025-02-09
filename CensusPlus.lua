@@ -117,9 +117,11 @@ local wholib
 
 if IntellisenseTrick_ExposeGlobal then
   wholib = LibWho
+  CPp.Normalization = Normalization
+  CPp.DatabaseOperation = DatabaseOperation
 end
 
-
+local NLZN = CPp.Normalization
 
 --[[	-- Global scope variables
 --
@@ -2743,26 +2745,18 @@ end
 function CensusPlus_CollectSightingData(unit)
   if (UnitIsPlayer(unit) and UnitName(unit) ~= 'Unknown') then
     -- create the return structure as non-nil fields
-    local ret = {}
-    local _ = nil
-    ret.name = ''
-    ret.realm = ''
-    ret.relationship = ''
-    ret.race = ''
-    --		ret.raceFilename = ""
-    ret.level = 0
-    --		ret.sex = 1
-    ret.class = ''
-    --		ret.classFilename = ""
-    ret.guild = ''
-    ret.guildrealm = ''
-    --		
-    -- RGK [GUILD] uncomment below - no valid usage here
-    --		ret.guildRankname = ""
-    --		ret.guildRankIndex = 99
-    --RGK endblock
-    ret.faction = ''
-    --		ret.factionName = ""
+    ---@type SightingData
+    local ret = {
+      name = '',
+      realm = '',
+      relationship = nil,
+      race = NLZN.RACE.UNSPECIFIED,
+      level = 0,
+      class = NLZN.CLASS.UNSPECIFIED,
+      guild = '',
+      guildrealm = '',
+      faction = '',
+    }
 
     -- now populate the return structure
     ret.name, ret.realm = UnitName(unit)           -- returns realm also Y +?
@@ -2773,14 +2767,16 @@ function CensusPlus_CollectSightingData(unit)
     --		  print("relationship = "..ret.relationship)
     --		end
     -- end debug		
-    if ((ret.realm == nil) or ret.relationship == 1) then
+    if ((ret.realm == '') or ret.relationship == 1) then
       ret.realm = GetRealmName()
     end
     ret.level = UnitLevel(unit) -- a number  YNum
     --		ret.sex = UnitSex(unit) -- a number 2=male 3=female  YNum
     --race, fileName = UnitRace("unit") -- fileName is A non-localized token representing the unit's race (string)
-    ret.race, _ = UnitRace(unit)   -- localized , non Y + Y non is english race treated as one word.. i.e. Blood Elf  Bloodelf
-    ret.class, _ = UnitClass(unit) -- localized ,non (warning if npc the npc name is returned!) y + y  Monk  MONK
+    local race, _ = UnitRace(unit)   -- localized , non Y + Y non is english race treated as one word.. i.e. Blood Elf  Bloodelf
+    ret.race = CPp.Normalization.N(race)
+    local class, _ = UnitClass(unit) -- localized ,non (warning if npc the npc name is returned!) y + y  Monk  MONK
+    ret.class = CPp.Normalization.N(class)
     -- guildName, guildRankName, guildRankIndex, guildrealm = GetGuildInfo("unit")  -- not listed as localized
     --		ret.guild, _, _,ret.guildrealm = GetGuildInfo(unit) -- ? + ? +Ynum=0?
     ret.guild, ret.guildRankName, ret.guildRankIndex, ret.guildrealm =

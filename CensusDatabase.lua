@@ -19,10 +19,25 @@
 		Foundation, Inc., 52 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ]]
 
+---@class SightingData
+---@field name string The character name.
+---@field realm string The realm.
+---@field relationship integer? Maybe one of LE_REALM_RELATION_SAME, LE_REALM_RELATION_COALESCED, LE_REALM_RELATION_VIRTUAL.
+---@field race RACE The race of the character.
+---@field level integer The character level.
+---@field class CLASS The class of the character.
+---@field guild string The guild of the character.
+---@field guildrealm string The Realm which the guild belongs.
+---@field faction string The faction of the character.
+
 local _, addon_tableID = ...
 local CPp = addon_tableID
 CPp.DatabaseOperation = {}
 local lib = CPp.DatabaseOperation
+
+if IntellisenseTrick_ExposeGlobal then
+  DatabaseOperation = lib
+end
 
 ---Initializes the Census data.
 function lib.Initialize()
