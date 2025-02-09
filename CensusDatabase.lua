@@ -28,7 +28,7 @@
 ---@field class CLASS The class of the character.
 ---@field guild string The guild of the character.
 ---@field guildrealm string The Realm which the guild belongs.
----@field faction string The faction of the character.
+---@field faction string "englishFaction" from the Blizzard API.
 
 local _, addon_tableID = ...
 local CPp = addon_tableID
@@ -66,4 +66,46 @@ function lib.Purge()
     CensusPlus_Database['TimesPlus'] = nil;
   end
   CensusPlus_Database['TimesPlus'] = {};
+end
+
+---Records a character to Census data.
+---@param realm string The NORMALIZED realm name.
+---@param faction string "englishFaction" from the Blizzard API.
+---@param race RACE
+---@param class CLASS
+---@param name any
+---@param level any
+---@param guild any
+---@param guildrealm any
+function lib.Record(realm, faction, race, class, name, level, guild, guildrealm)
+  local censusData = CensusPlus_Database['Servers']
+  local realmDatabase = censusData[realm];
+  if (realmDatabase == nil) then
+    censusData[realm] = {};
+    realmDatabase = censusData[realm];
+  end
+  local factionDatabase = realmDatabase[faction];
+  if (factionDatabase == nil) then
+    realmDatabase[faction] = {};
+    factionDatabase = realmDatabase[faction];
+  end
+  local raceDatabase = factionDatabase[race];
+  if (raceDatabase == nil) then
+    factionDatabase[race] = {};
+    raceDatabase = factionDatabase[race];
+  end
+  local classDatabase = raceDatabase[class];
+  if (classDatabase == nil) then
+    raceDatabase[class] = {};
+    classDatabase = raceDatabase[class];
+  end
+  local entry = classDatabase[name];
+  if (entry == nil) then
+    classDatabase[name] = {};
+    entry = classDatabase[name];
+  end
+  entry[1] = level;
+  entry[2] = guild;
+  entry[3] = guildrealm
+  entry[4] = CensusPlus_DetermineServerDate();
 end

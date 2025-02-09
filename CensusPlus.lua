@@ -2596,8 +2596,7 @@ function CensusPlus_ProcessTarget(unit)
     return; -- bail out on non-player unit or unit focus on self
   end
 
-  local sightingData = {}
-  sightingData = CensusPlus_CollectSightingData(unit)
+  local sightingData = CensusPlus_CollectSightingData(unit)
 
   if (sightingData == nil or sightingData.faction == nil or sightingData.faction == CENSUSPlus_NEUTRAL) then
     --	  print("worthless Neutral")
@@ -2609,28 +2608,30 @@ function CensusPlus_ProcessTarget(unit)
     return
   end
 
+  if sightingData.faction ~= CENSUSPlus_ALLIANCE and sightingData.faction ~= CENSUSPlus_HORDE then
+    return
+  end
 
-  if (sightingData ~= nil and (sightingData.faction == CENSUSPlus_ALLIANCE or sightingData.faction == CENSUSPlus_HORDE)) then
-    if (sightingData.guild == nil) then
-      sightingData.guild = '';
-      -- RGK testing [GUILD]			
-      sightingData.guildRankName = '';
-      sightingData.guildRankIndex = '';
-      --RGK endblock			
-    else
-      sightingData.guild = PTR_Color_ProblemRealmGuilds_check(sightingData.guild)
-    end
-    --
-    -- Get the portion of the database for this server
-    --
-    local realmName = nil
-    if (sightingData.realm == nil) then
-      realmName = CPp.CensusPlusLocale .. GetRealmName()
+  if (sightingData.guild == nil) then
+    sightingData.guild = '';
+    -- RGK testing [GUILD]			
+    sightingData.guildRankName = '';
+    sightingData.guildRankIndex = '';
+    --RGK endblock			
+  else
+    sightingData.guild = PTR_Color_ProblemRealmGuilds_check(sightingData.guild)
+  end
+  --
+  -- Get the portion of the database for this server
+  --
+  local realmName = nil
+  if (sightingData.realm == nil) then
+    realmName = CPp.CensusPlusLocale .. GetRealmName()
 
-      realmName = PTR_Color_ProblemRealmGuilds_check(realmName)
-    else -- sightingData.realm is not nil
-      sightingData.realm = PTR_Color_ProblemRealmGuilds_check(sightingData.realm)
-      --[[
+    realmName = PTR_Color_ProblemRealmGuilds_check(realmName)
+  else -- sightingData.realm is not nil
+    sightingData.realm = PTR_Color_ProblemRealmGuilds_check(sightingData.realm)
+    --[[
 			if(	CensusPlus_Database["Info"]["Locale"] == "EU" )then		
 -- work around for Blizzards oddball name for EU-Portugese server
 				local stsrt,_,_ = string.find(sightingData.realm,'%(')
@@ -2650,51 +2651,19 @@ function CensusPlus_ProcessTarget(unit)
 				end
 			end
 --]]
+  end
+  realmName = CPp.CensusPlusLocale .. sightingData.realm
+  if (sightingData.relationship == LE_REALM_RELATION_VIRTUAL) then
+    if (CPp.VRealms == nil) then
+      CPp.VRealms = {};
     end
-    realmName = CPp.CensusPlusLocale .. sightingData.realm
-    if (sightingData.relationship == LE_REALM_RELATION_VIRTUAL) then
-      if (CPp.VRealms == nil) then
-        CPp.VRealms = {};
-      end
-      VRealmMembership_verifier(realmName)
-    end
-    local realmDatabase = CensusPlus_Database['Servers'][realmName];
-    if (realmDatabase == nil) then
-      CensusPlus_Database['Servers'][realmName] = {};
-      realmDatabase = CensusPlus_Database['Servers'][realmName];
-    end
+    VRealmMembership_verifier(realmName)
+  end
 
-    --
-    -- Get the portion of the database for this faction
-    --
-    local factionDatabase = realmDatabase[sightingData.faction];
-    if (factionDatabase == nil) then
-      realmDatabase[sightingData.faction] = {};
-      factionDatabase = realmDatabase[sightingData.faction];
-    end
-
-    --
-    -- Get racial database
-    --
-    local raceDatabase = factionDatabase[sightingData.race];
-    if (raceDatabase == nil) then
-      factionDatabase[sightingData.race] = {};
-      raceDatabase = factionDatabase[sightingData.race];
-    end
-
-    --
-    -- Get class database
-    --
-    local classDatabase = raceDatabase[sightingData.class];
-    if (classDatabase == nil) then
-      raceDatabase[sightingData.class] = {};
-      classDatabase = raceDatabase[sightingData.class];
-    end
-
-    sightingData.name = PTR_Color_ProblemNames_check(sightingData.name);
-    sightingData.guildrealm = PTR_Color_ProblemRealmGuilds_check(sightingData
-      .guildrealm)
-    --[[
+  sightingData.name = PTR_Color_ProblemNames_check(sightingData.name);
+  sightingData.guildrealm = PTR_Color_ProblemRealmGuilds_check(sightingData
+    .guildrealm)
+  --[[
 		if(	CensusPlus_Database["Info"]["Locale"] == "EU" )then		
 -- work around for Blizzards oddball name for EU-Portugese server
 				local stsrt,_,_ = string.find(sightingData.guildrealm,'%(')
@@ -2715,27 +2684,12 @@ function CensusPlus_ProcessTarget(unit)
 			end
 		end	
 --]]
-    sightingData.guildrealm = CPp.CensusPlusLocale .. sightingData.guildrealm
-
-    --
-    local entry = classDatabase[sightingData.name];
-    if (entry == nil) then
-      classDatabase[sightingData.name] = {};
-      entry = classDatabase[sightingData.name];
-    end
-
-    --
-    -- Update the information
-    --
-    entry[1] = sightingData.level;
-    entry[2] = sightingData.guild;
-    entry[3] = sightingData.guildrealm
-    entry[4] = CensusPlus_DetermineServerDate() .. '';
-    -- RGK [GUILD] not valid usage here
-    --		entry[5] = 	sightingData.guildRankName;
-    --		entry[6] = 	sightingData.guildRankIndex;
-    -- RGK endblock
-  end
+  sightingData.guildrealm = CPp.CensusPlusLocale .. sightingData.guildrealm
+  CPp.DatabaseOperation.Record(realmName, sightingData.faction,
+                               sightingData.race, sightingData.class,
+                               sightingData.name,
+                               sightingData.level, sightingData.guild,
+                               sightingData.guildrealm)
 end
 
 --[[	-- Gather targeting data
