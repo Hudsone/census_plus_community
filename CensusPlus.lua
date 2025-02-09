@@ -5931,8 +5931,8 @@ end
 
 -- UI element configurations
 CP_EU_US_Version_BackdropInfo = {
-  bgFile = 'Interface\DialogFrame\UI-DialogBox-Background',
-  edgeFile = 'Interface\DialogFrame\UI-DialogBox-Border',
+  bgFile = 'Interface\\DialogFrame\\UI-DialogBox-Background',
+  edgeFile = 'Interface\\DialogFrame\\UI-DialogBox-Border',
   tile = true,
   tileEdge = true,
   tileSize = 32,
@@ -5941,7 +5941,7 @@ CP_EU_US_Version_BackdropInfo = {
 };
 
 CP_PlayerListWindow_BackdropInfo = {
-  edgeFile = 'Interface\DialogFrame\UI-DialogBox-Border',
+  edgeFile = 'Interface\\DialogFrame\\UI-DialogBox-Border',
   tileEdge = true,
   tileSize = 32,
   edgeSize = 32,
