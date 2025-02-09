@@ -1362,26 +1362,9 @@ function CP_ProcessWhoEvent(query, result)
         local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
         local numRaces = #thisFactionRaces;
         for _, i in ipairs(shuffled_numbers(numRaces)) do
-          if (CensusPlus_Database['Info']['ClientLocale'] ~= 'deDE') then
-            if (CENSUSPLUS_LIGHTFORGED ~= thisFactionRaces[i])
-                and (CENSUSPLUS_DARKIRON ~= thisFactionRaces[i])
-                and (CENSUSPLUS_HIGHMOUNTAIN ~= thisFactionRaces[i])
-                and (CENSUSPLUS_ZANDALARI ~= thisFactionRaces[i])
-                and (CENSUSPLUS_MAGHAR ~= thisFactionRaces[i]) then
-              local job = CensusPlus_CreateJob(level, level, thisFactionRaces[i],
-                                               nil, nil);
-              InsertJobIntoQueue(job);
-            end
-          else
-            if (CENSUSPLUS_LIGHTFORGED ~= thisFactionRaces[i])
-                and (CENSUSPLUS_DARKIRON ~= thisFactionRaces[i])
-                and (CENSUSPLUS_HIGHMOUNTAIN ~= thisFactionRaces[i])
-                and (CENSUSPLUS_ZANDALARI ~= thisFactionRaces[i]) then
-              local job = CensusPlus_CreateJob(level, level, thisFactionRaces[i],
-                                               nil, nil);
-              InsertJobIntoQueue(job);
-            end
-          end
+          local job = CensusPlus_CreateJob(level, level, thisFactionRaces[i], nil,
+                                           nil);
+          InsertJobIntoQueue(job);
         end
       else
         if (class == nil) then
@@ -1394,11 +1377,9 @@ function CP_ProcessWhoEvent(query, result)
           --					print(numClasses);
           for _, i in ipairs(shuffled_numbers(numClasses)) do
             --					print(thisRaceClasses[i]);
-            if CENSUSPLUS_DEMONHUNTER ~= thisRaceClasses[i] then
-              local job = CensusPlus_CreateJob(level, level, race,
-                                               thisRaceClasses[i], nil);
-              InsertJobIntoQueue(job);
-            end
+            local job = CensusPlus_CreateJob(level, level, race,
+                                             thisRaceClasses[i], nil);
+            InsertJobIntoQueue(job);
           end
         else
           if (letter == nil) then
