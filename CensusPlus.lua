@@ -1291,16 +1291,12 @@ function CP_ProcessWhoEvent(query, result)
   local numWhoResults = 0;
   local cpdb_complete_flag = ''
   whoquery_answered = true
-  if (CensusPlus_WHOPROCESSOR == CP_libwho) then
-    if (complete) then
-      cpdb_complete_flag = '' -- :complete"
-      numWhoResults = #result
-    else
-      cpdb_complete_flag = '' -- :too many"
-      numWhoResults = MAX_WHO_RESULTS
-    end
+  if (complete) then
+    cpdb_complete_flag = '' -- :complete"
+    numWhoResults = #result
   else
-    numWhoResults = GetNumWhoResults()
+    cpdb_complete_flag = '' -- :too many"
+    numWhoResults = MAX_WHO_RESULTS
   end
 
   if (g_Verbose == true) then
@@ -1326,7 +1322,7 @@ function CP_ProcessWhoEvent(query, result)
 
   CensusPlus_ProcessWhoResults(result, numWhoResults)
 
-  if ((CensusPlus_WHOPROCESSOR == CP_libwho) and (not complete)) or ((CensusPlus_WHOPROCESSOR == CP_api) and (numWhoResults > MAX_WHO_RESULTS)) then
+  if not complete then
     --[[
 		-- Who list is overflowed, split the query to make the return smaller
 		--
@@ -3488,11 +3484,6 @@ new process no assumption. process realm, then faction, level, race,class
 
 --]]
   --5.4
-  if (CensusPlus_WHOPROCESSOR == CP_libwho) then
-    local numWhoResults = numWhoResults
-  else
-    local numWhoResults = GetNumWhoResults()
-  end
 
   if (g_Verbose == true) then
     CensusPlus_Msg(format(CENSUSPLUS_PROCESSING, numWhoResults));
@@ -3517,14 +3508,13 @@ new process no assumption. process realm, then faction, level, race,class
     local tmpGldst = nil
     local tmpGldend = nil
     local relationship = nil
-    if (CensusPlus_WHOPROCESSOR == CP_libwho) then
-      name = result[i].Name
-      --[[ Note:  name and realm
+    name = result[i].Name
+    --[[ Note:  name and realm
 				if character tracked is on same realm as player character then name is returned as Name only
 				if character tracked is on a non-local connected realm then name is returned as Name-Realm
 --]]
 
-      --[[			if (relationship == LE_REALM_RELATION_SAME) then
+    --[[			if (relationship == LE_REALM_RELATION_SAME) then
 				realm = GetRealmName();
 				relate = "same server";
 				if (HortonBug == true) then
@@ -3533,108 +3523,63 @@ new process no assumption. process realm, then faction, level, race,class
 				end
 			else
 --]]
-      tmpNmst, tmpNmend = string.find(result[i].Name, '-');
-      if (tmpNmst) then
-        realm = string.sub(result[i].Name, tmpNmst + 1);
-        name = string.sub(result[i].Name, 1, tmpNmst - 1);
-      else
-        realm = GetRealmName(); -- this shouldn't happen except where Blizzard doesn't encode relationships  {sigh and they didn't}
-      end
-      -- 5.4
-      guild = result[i].Guild
-      --[[ Note:  guild and realm
+    tmpNmst, tmpNmend = string.find(result[i].Name, '-');
+    if (tmpNmst) then
+      realm = string.sub(result[i].Name, tmpNmst + 1);
+      name = string.sub(result[i].Name, 1, tmpNmst - 1);
+    else
+      realm = GetRealmName();   -- this shouldn't happen except where Blizzard doesn't encode relationships  {sigh and they didn't}
+    end
+    -- 5.4
+    guild = result[i].Guild
+    --[[ Note:  guild and realm
 				if character's guild tracked is on same realm as player character then guild is returned as guild only
 				if character's guild tracked is on a non-local connected realm then guild is returned as guild-Realm
 --]]
-      if (HortonBug == true) then
-        says('Who returned ' .. result[i].Name .. '  Guild = ' .. result[i]
-          .Guild);
-      end
-      if ((guild ~= nil) and (guild ~= '')) then
-        local guildName =
-        '' -- defined if valid guild returned from who call otherwise nil.. am I sure about this?
-        --[[ invalid coding.. GetGuildInfo only works with (unit) not ("name") as indicated at www.wowprogramming.com sigh
+    if (HortonBug == true) then
+      says('Who returned ' .. result[i].Name .. '  Guild = ' .. result[i]
+        .Guild);
+    end
+    if ((guild ~= nil) and (guild ~= '')) then
+      local guildName =
+      ''   -- defined if valid guild returned from who call otherwise nil.. am I sure about this?
+      --[[ invalid coding.. GetGuildInfo only works with (unit) not ("name") as indicated at www.wowprogramming.com sigh
 				guildName,guildRankName, guildRankIndex, guildRealm = GetGuildInfo(result[i].Name)  -- I'm assuming this will be  guild, guildrealm  and not guild-realm, guildrealm
 print(result[i].Name)
 --print(unitGUID(result[1].Name))
 print(guild)
 --]]
-        --				if (guildName == nil) then
-        tmpGldst, tmpGldend = string.find(result[i].Guild, '-');
-        if (tmpGldst ~= nil) then
-          guildRealm = string.sub(result[i].Guild, tmpGldst + 1);
-          guild = string.sub(result[i].Guild, 1, tmpGldst - 1);
-        else
-          guildRealm = GetRealmName();
-        end
-        if (HortonBug == true) then
-          says('guild realm =  ' .. guildRealm);
-        end
-        --				else
-        --					if (guildRealm == nil) then
-        --						guildRealm = GetRealmName();
-        --					end
-        --				end
+      --				if (guildName == nil) then
+      tmpGldst, tmpGldend = string.find(result[i].Guild, '-');
+      if (tmpGldst ~= nil) then
+        guildRealm = string.sub(result[i].Guild, tmpGldst + 1);
+        guild = string.sub(result[i].Guild, 1, tmpGldst - 1);
       else
-        guild = '';
-        guildRealm = '';
-      end
-
-      level = result[i].Level
-      race = result[i].Race
-      if (CENSUSPlusFemale[race] ~= nil) then
-        race = CENSUSPlusFemale[race];
-      end
-      class = result[i].Class
-      if (CENSUSPlusFemale[class] ~= nil) then
-        class = CENSUSPlusFemale[class];
-      end
-      zone = result[i].Zone
-    else
-      name, guild, level, race, class, zone, group = GetWhoInfo(i);
-      if (CENSUSPlusFemale[race] ~= nil) then
-        race = CENSUSPlusFemale[race];
-      end
-      if (CENSUSPlusFemale[class] ~= nil) then
-        class = CENSUSPlusFemale[class];
+        guildRealm = GetRealmName();
       end
       if (HortonBug == true) then
-        says('who API returned ' .. name)
+        says('guild realm =  ' .. guildRealm);
       end
-      --- debug testing
-      local orig_name = name
-      local orig_guild = guild
-      tmpNmst, tmpNmend = string.find(name, '-');
-      if (tmpNmst) then
-        realm = string.sub(name, tmpNmst + 1);
-        name = string.sub(name, 1, tmpNmst - 1);
-        --				    s.ays("parsed name = " .. name);
-        --				    s.ays("parsed realm = " .. realm);
-      else
-        realm = GetRealmName(); -- this shouldn't happen except where Blizzard doesn't encode relationships
-      end
-
-      if ((guild ~= nil) and (guild ~= '')) then
-        local guildName = ''
-        guildName, _, _ = GetGuildInfo(orig_name)
-        if (guildName == nil) then
-          tmpGldst, tmpGldend = string.find(orig_guild, '-');
-          if (tmpGldst) then
-            guildRealm = string.sub(orig_guild, tmpGldst + 1);
-            guild = string.sub(orig_guild, 1, tmpGldst - 1);
-          else
-            guildRealm = GetRealmName();
-          end
-        else
-          if (guildRealm == nil) then
-            guildRealm = GetRealmName();
-          end
-        end
-      else
-        guild = '';
-        guildRealm = '';
-      end
+      --				else
+      --					if (guildRealm == nil) then
+      --						guildRealm = GetRealmName();
+      --					end
+      --				end
+    else
+      guild = '';
+      guildRealm = '';
     end
+
+    level = result[i].Level
+    race = result[i].Race
+    if (CENSUSPlusFemale[race] ~= nil) then
+      race = CENSUSPlusFemale[race];
+    end
+    class = result[i].Class
+    if (CENSUSPlusFemale[class] ~= nil) then
+      class = CENSUSPlusFemale[class];
+    end
+    zone = result[i].Zone
 
     --[[ PTR testing modifications
 			Blizzard has odd naming allowances in PTR realms
