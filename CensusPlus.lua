@@ -2790,13 +2790,6 @@ function CensusPlus_InitializeVariables()
   if (g_templang == 'ptBR' and regionKey == 'EU') then
     g_templang = 'ptPT';
   end
-  if (CensusPlus_Database['Info']['ClientLocale'] ~= g_templang) then
-    -- Client language has been changed must purge
-    CensusPlus_DoPurge();
-    if (not (CPp.FirstLoad == true)) then
-      CensusPlus_Msg(CENSUSPLUS_LANGUAGECHANGED);
-    end
-  end
   CensusPlus_Database['Info']['ClientLocale'] = GetLocale();
 
   if (CensusPlus_Database['Info']['ClientLocale'] == 'enUS' and regionKey == 'EU') then
@@ -2805,23 +2798,11 @@ function CensusPlus_InitializeVariables()
   if (CensusPlus_Database['Info']['ClientLocale'] == 'ptBR' and regionKey == 'EU') then
     CensusPlus_Database['Info']['ClientLocale'] = 'ptPT';
   end
-  if (CensusPlus_Database['Info']['LoginServer'] ~= nil) then
-    --  already present, make sure it equals, and if
-    --		not, force a purge
-    if (CensusPlus_Database['Info']['LoginServer'] ~= regionKey) then
-      --
-      --	We have to nuke the data in the case that someone is playing on both
-      --	US and EU servers
-      --
-      CensusPlus_DoPurge()
-    end
-  end
   CensusPlus_Database['Info']['LoginServer'] = regionKey;
 
   local localeSetting = CensusPlus_Database['Info']['Locale'];
   if (localeSetting == '??') then
     --  We had problems previously.. we must purge =(
-    CensusPlus_DoPurge();
     localeSetting = nil;
   end
 
@@ -2831,7 +2812,6 @@ function CensusPlus_InitializeVariables()
   if (CensusPlus_Database['Info']['ClientLocale'] == 'enUS' or
         CensusPlus_Database['Info']['ClientLocale'] == 'esMX' or
         CensusPlus_Database['Info']['ClientLocale'] == 'ptBR') then
-    CensusPlus_VerifyLocale('US');
     CensusPlus_Database['Info']['Locale'] = 'US';
   elseif (CensusPlus_Database['Info']['ClientLocale'] == 'enGB' or
         CensusPlus_Database['Info']['ClientLocale'] == 'frFR' or
@@ -2839,10 +2819,8 @@ function CensusPlus_InitializeVariables()
         CensusPlus_Database['Info']['ClientLocale'] == 'esES' or
         CensusPlus_Database['Info']['ClientLocale'] == 'ptPT' or
         CensusPlus_Database['Info']['ClientLocale'] == 'itIT') then
-    CensusPlus_VerifyLocale('EU');
     CensusPlus_Database['Info']['Locale'] = 'EU';
   else
-    CensusPlus_VerifyLocale('??');
     CensusPlus_Database['Info']['Locale'] = '??';
   end
   CensusPlus_Database['Info']['LogVer'] = CensusPlus_VERSION_FULL;
@@ -4853,19 +4831,6 @@ function CensusPlus_UpdateGuildButtons()
                          CensusPlus_NUMGUILDBUTTONS, CensusPlus_GUILDBUTTONSIZEY);
 end
 
---[[	-- CensusPlus_VerifyLocale - Set the locale (US or EU)
---
-  ]]
-
-function CensusPlus_VerifyLocale(locale)
-  if (CensusPlus_Database['Info']['Locale'] ~= locale) then
-    --
-    --  Purge
-    --
-    CensusPlus_DoPurge()
-  end
-end
-
 --[[	-- CensusPlus_SelectLocale - Set the locale (US or EU)
 --
   ]]
@@ -4884,13 +4849,6 @@ function CensusPlus_SelectLocale(locale, auto) -- referenced by CensusPlus.xml
   end
 
 
-  if (CensusPlus_Database['Info']['Locale'] ~= locale) then
-    if (not (CensusPlus_Database['Info']['Locale'] == nil and locale == 'US')) then
-      CensusPlus_Msg(CENSUSPLUS_WRONGLOCAL_PURGE);
-      CensusPlus_DoPurge();
-      CensusPlus_Database['Info']['Locale'] = locale;
-    end
-  end
   CensusPlus_Database['Info']['Locale'] = locale;
 
   textLine = _G['CensusPlusText'];
