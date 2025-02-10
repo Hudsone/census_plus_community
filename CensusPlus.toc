@@ -12,6 +12,8 @@
 ## OptionalDeps: LibStub, CallbackHandler-1.0, LibWho-3.0
 ## SavedVariables: CensusPlus_Database, CensusPlus_CRealms, CensusPlus_Guilds, CensusPlus_JobQueue
 ## SavedVariablesPerCharacter: CensusPlus_PerCharInfo
+## X-Curse-Project-ID: 1192911
+## X-WoWI-ID: 26901
 
 #@no-lib-strip@
 libs\LibStub\LibStub.lua
