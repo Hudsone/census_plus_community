@@ -214,4 +214,8 @@ CENSUSPLUS_HELP_9 = ' _  將設定自動統計的計時器 (為 X 分鐘)。'
 CENSUSPLUS_HELP_10 = ' _ 更新玩家角色資訊…… /CensusPlus 完成時自動進行。';
 CENSUSPLUS_HELP_11 = ' _ 啟用/停用隱形模式，啟用會關閉詳細訊息模式並隱藏 CensusPlus 所有的訊息。'
 
+CENSUSPLUS_SPECIAL_THANKS = '特別感謝'
+CENSUSPLUS_FOR_TESTING = '版本測試'
+CENSUSPLUS_FOR_WHOLIB_REPOSITORY_SUPPORTS = 'WhoLib 儲存庫支援'
+
 end

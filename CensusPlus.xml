@@ -14,6 +14,24 @@
   <Script file="CensusNormalization.lua" />
   <Script file="CensusPlus.lua" />
   <Script file="CensusDatabase.lua" />
+  <Frame name="CensusPlusOptionPlainTextTemplate"
+         mixin="CensusPlusOptionPlainTextMixin"
+         virtual="true">
+    <Size y="20" />
+    <Layers>
+      <Layer level="OVERLAY">
+        <FontString parentKey="Text"
+                    inherits="GameFontNormal"
+                    justifyH="LEFT"
+                    justifyV="TOP">
+          <Anchors>
+            <Anchor point="LEFT"
+                    x="37" />
+          </Anchors>
+        </FontString>
+      </Layer>
+    </Layers>
+  </Frame>
   <Frame name="CensusPlusVersionTagTemplate"
          mixin="CensusPlusVersionTagMixin"
          virtual="true">

@@ -5450,6 +5450,13 @@ function CensusPlusVersionTagMixin:Init(initializer)
   self.Version:SetTextToFit(data.version);
 end
 
+CensusPlusOptionPlainTextMixin = {}
+
+function CensusPlusOptionPlainTextMixin:Init(initializer)
+  local data = initializer:GetData();
+  self.Text:SetTextToFit(data.text);
+end
+
 function CensusPlusBlizzardOptions()
   local SavedVars = CensusPlus_Database.Info
   local categoryName = C_AddOns.GetAddOnMetadata('CensusPlus', 'Title')
@@ -5595,7 +5602,17 @@ function CensusPlusBlizzardOptions()
   end
 
   layout:AddInitializer(Settings.CreateElementInitializer(
-    'CensusPlusVersionTagTemplate', {version = CensusPlus_VERSION_FULL}));
+    'CensusPlusVersionTagTemplate', {version = CensusPlus_VERSION_FULL}))
+  layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(
+    CENSUSPLUS_SPECIAL_THANKS))
+  local specialThanksList = {
+    ['Kevin Chu'] = CENSUSPLUS_FOR_TESTING,
+    ['RealPazza, Devin'] = CENSUSPLUS_FOR_WHOLIB_REPOSITORY_SUPPORTS,
+  }
+  for name, desc in pairs(specialThanksList) do
+    layout:AddInitializer(Settings.CreateElementInitializer(
+      'CensusPlusOptionPlainTextTemplate', {text = name .. ' - ' .. desc}))
+  end
   Settings.RegisterAddOnCategory(category)
   CensusPlus_OptionCategory = category
 end

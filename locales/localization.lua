@@ -555,6 +555,10 @@ CENSUSPLUS_HELP_8                              = ' _  Will list unguilded charac
 CENSUSPLUS_HELP_9                              = ' _  Will set the autocensus timer (to X minutes).';
 CENSUSPLUS_HELP_10                             = ' _ Does Census update of player only.. this is done automatically when /CensusPlus take finishes.';
 CENSUSPLUS_HELP_11                             = ' _ Toggles stealth mode off/on - disables Verbose and all CensusPlus chat messages.';
+
+CENSUSPLUS_SPECIAL_THANKS                      = 'Special Thanks'
+CENSUSPLUS_FOR_TESTING                         = 'for testing'
+CENSUSPLUS_FOR_WHOLIB_REPOSITORY_SUPPORTS      = 'for WhoLib repository supports'
 -- CensusPlus_
 --playerlist.lua
 
