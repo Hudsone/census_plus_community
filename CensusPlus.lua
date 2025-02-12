@@ -163,13 +163,10 @@ local CensusPlayerOnly = false                  -- true if player requests via /
 CensusPlus_JobQueue.g_NumNewCharacters = 0;     -- How many new characters found this CensusPlus
 CensusPlus_JobQueue.g_NumUpdatedCharacters = 0; -- How many characters were updated during this CensusPlus
 
-local g_MobXPByLevel = {};                      -- XP earned for killing
-local g_CharacterXPByLevel = {};                -- XP required to advance through the given level
 local g_TotalCharacterXPPerLevel = {};          -- Total XP required to attain the given level
 
 CensusPlus_Guilds = {};                         -- All known guild
 
-local g_TotalCharacterXP = 0;                   -- Total character XP for currently selected search
 local g_Consecutive = 0;                        -- Current consecutive same realm/faction run count
 local g_TotalCount = 0;                         -- Total number of characters which meet search criteria
 local g_RaceCount = {};                         -- Totals for each race given search criteria
@@ -194,6 +191,7 @@ g_TempCount = {									-- table of tables  realm, name, class
 
 --]]
 --local --global for PTR testing
+---@type string[]
 CPp.VRealms                             = {}; -- Table for membership of realms in Virtual Realm
 --local --global for PTR testing
 CensusPlus_JobQueue.g_TempCount         = {};
@@ -490,25 +488,9 @@ end
 ]]
 
 local function InitConstantTables()
-  -- XP earned for killing
-
-  for i = 1, MAX_CHARACTER_LEVEL, 1 do
-    g_MobXPByLevel[i] = i;
-  end
-
-  -- XP required to advance through the given level
-
-  for i = 1, MAX_CHARACTER_LEVEL, 1 do
-    g_CharacterXPByLevel[i] = ((8 * i * g_MobXPByLevel[i]) / 100) * 100;
-  end
-
   -- Total XP required to attain the given level
-
-  local totalCharacterXP = 0;
   for i = 1, MAX_CHARACTER_LEVEL, 1 do
-    --		g_TotalCharacterXPPerLevel[i] = totalCharacterXP;
-    --totalCharacterXP = totalCharacterXP + g_CharacterXPByLevel[i];
-    val = (i * 5) / MAX_CHARACTER_LEVEL;
+    local val = (i * 5) / MAX_CHARACTER_LEVEL;
     g_TotalCharacterXPPerLevel[i] = math.exp(val);
   end
 end
@@ -3732,6 +3714,16 @@ local function FindGuildByName(name)
   return nil;
 end
 
+---Gets an accumulator for counting the number of characters.
+---@param container table The result will be put to this container with the key `count`.
+---@return function The accumulator function.
+local function getAccumulator(container)
+  container.count = 0;
+  return function()
+    container.count = container.count + 1;
+  end
+end
+
 --[[	-- Add up the total character XP and count
 --
   ]]
@@ -3745,6 +3737,7 @@ local function TotalsAccumulator(
     lastseen,
     realmName,
     guildRealm)
+  g_TotalCount = g_TotalCount + 1;
   --
   --  Add character to our player list
   --
@@ -3754,7 +3747,7 @@ local function TotalsAccumulator(
                                realmName, guildRealm);
   end
 
-  if (g_TotalCharacterXPPerLevel[level]) then
+  if (g_TotalCharacterXPPerLevel[level] == nil) then
     InitConstantTables();
   end
 
@@ -3762,11 +3755,6 @@ local function TotalsAccumulator(
   if (totalCharacterXP == nil) then
     totalCharacterXP = 0;
   end
-  if (g_TotalCharacterXP == nil) then
-    g_TotalCharacterXP = 0;
-  end
-  g_TotalCharacterXP = g_TotalCharacterXP + totalCharacterXP;
-  g_TotalCount = g_TotalCount + 1;
   --	print("g_TCount = "..g_TotalCount.." "..guild)
   if (g_AccumulateGuildTotals and (guild ~= nil)) then
     local index = FindGuildByName(guild);
@@ -3895,6 +3883,113 @@ local function getIconTexture(raceClass)
   return normalTextureName
 end
 
+---Sets up the fixed UI text.
+---@param guildFrameTitle string The guild frame title.
+---@param factionGName string The faction group name.
+---@param locale string? The locale code.
+local function setupFixedUiText(guildFrameTitle, factionGName, locale)
+  CensusPlusRealmName:SetText(CENSUSPLUS_REALMNAME)
+  CensusPlusConnected:SetText(CENSUSPLUS_CONNECTED)
+  CensusPlusConnected2:SetText(CENSUSPLUS_CONNECTED2)
+  CensusPlusConnected3:SetText(CENSUSPLUS_CONNECTED2)
+  CensusPlusTopGuildsTitle:SetText(guildFrameTitle)
+  CensusPlusFactionName:SetText(format(CENSUSPLUS_FACTION, factionGName))
+  if locale then
+    CensusPlusLocaleName:SetText(format(CENSUSPLUS_LOCALE, locale))
+  end
+end
+
+---Gets the selected realm arguments.
+---
+---Depends on whether the guild button is toggled, return different realm arguments.
+---@param connectedRealmsButton integer The realm button ID that was toggled. 0 denotes that no realm button is toggled.
+---@return string? realmName, string guildFrameTitle, boolean accumulateGuildTotals
+local function getRealmArguments(connectedRealmsButton)
+  local realmName, guildFrameTitle, accumulateGuildTotal = '', '', false
+  if connectedRealmsButton == 0 then
+    realmName = CPp.CensusPlusLocale .. GetRealmName()
+    guildFrameTitle = CENSUSPLUS_GETGUILD
+    accumulateGuildTotal = false
+  else
+    realmName = CPp.VRealms[connectedRealmsButton]
+    guildFrameTitle = CENSUSPLUS_TOPGUILD
+    accumulateGuildTotal = true
+  end
+  if realmName ~= nil then
+    if (CensusPlus_PTR ~= false) then
+      realmName = PTR_Color_ProblemRealmGuilds_check(realmName)
+    end                                              -- not PTR must be live
+    local stsrt, _, _ = string.find(realmName, '%(') -- strip off problem codes from Blizzards Portuguese realm if that has slipped through to this point
+    if stsrt ~= nil then
+      realmName = string.sub(realmName, 1, stsrt - 2)
+    end
+  end
+  return realmName, guildFrameTitle, accumulateGuildTotal
+end
+
+---Updates the realm button text.
+---@param connectedRealmsButton integer The realm button ID that was toggled. 0 denotes that no realm button is toggled.
+local function updateRealmButtonText(connectedRealmsButton)
+  local conmemcount = #CPp.VRealms
+  for i = 1, conmemcount, 1 do
+    local textField = 'CensusPlusConnectedRealmButton' .. i .. 'Text'
+    if ((CPp.VRealms[i] == nil) or (CPp.VRealms[i] == '')) then
+      _G[textField]:SetText('');
+    else
+      if (i == connectedRealmsButton) then
+        _G[textField]:SetText('|cffffd200' .. CPp.VRealms[i] .. '|r');
+      else
+        _G[textField]:SetText(CPp.VRealms[i]);
+      end
+    end
+  end
+end
+
+local function getSelectedRealmKey()
+  if (CPp.ConnectedRealmsButton ~= 0) then
+    return CPp.VRealms[CPp.ConnectedRealmsButton]
+  end
+  return nil
+end
+
+local function getSelectedGuildKey()
+  local guildRealmKey, guildKey = nil, nil
+  if (CPp.ConnectedRealmsButton ~= 0) then
+    if (CPp.GuildSelected ~= nil) then
+      guildRealmKey = CPp.VRealms[CPp.ConnectedRealmsButton]
+      guildKey = CPp.GuildSelected;
+    end
+  else
+    if (CPp.GuildSelected ~= nil) then
+      CPp.GuildSelected = nil;
+    end
+  end
+  return guildKey, guildRealmKey
+end
+
+local function getSelectedRaceKey(factionGroup)
+  if (CPp.RaceSelected > 0) then
+    local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
+    return thisFactionRaces[CPp.RaceSelected];
+  end
+  return nil
+end
+
+local function getSelectedClassKey(factionGroup)
+  if (CPp.ClassSelected > 0) then
+    local thisFactionClasses = CensusPlus_GetFactionClasses(factionGroup);
+    return thisFactionClasses[CPp.ClassSelected];
+  end
+  return nil
+end
+
+local function getSelectedLevelKey()
+  if CPp.LevelSelected > 0 or CPp.LevelSelected < 0 then
+    return CPp.LevelSelected
+  end
+  return nil
+end
+
 --[[	-- Search the character database using the search criteria and update display
 --
   ]]
@@ -3904,72 +3999,15 @@ function CensusPlus_UpdateView()
   --  No need to d..o anything if the window is not open
   --
   if (not CensusPlus:IsVisible()) then
-    return;
+    return
+  end
+
+  if (not (g_VariablesLoaded)) then -- if variables aren't loaded show partial window data and escape
+    return
   end
 
   if (CPp.CensusPlusLocale == 'N/A') then
-    return;
-  end
-
-  --
-  -- Get realm and faction
-  -- if connected member set use that member else use the default login realm
-  local realmName = CPp.CensusPlusLocale .. GetRealmName();
-  CensusPlusRealmName:SetText(CENSUSPLUS_REALMNAME);
-
-  if (CPp.ConnectedRealmsButton == 0) then
-    CensusPlusTopGuildsTitle:SetText(CENSUSPLUS_GETGUILD);
-    --		realmName = CPp.CensusPlusLocale .. GetRealmName(); -- valid but already handled
-    g_AccumulateGuildTotals = nil;
-  else
-    CensusPlusTopGuildsTitle:SetText(CENSUSPLUS_TOPGUILD);
-    realmName = CPp.VRealms[CPp.ConnectedRealmsButton]
-    --		print(realmName)
-    g_AccumulateGuildTotals = true;
-  end
-  --[[	
-print("Current "..current_realm)
-	if ((CPp.ConnectedRealmsButton ~= current_realm) and (CPp.GuildSelected ~= nil )) then
-		CPp.GuildSelected = nil;
-		guildKey = nil; -- force reset of guildKey if realm is deselected
-		guildRealmKey = nil; -- force reset of guildRealmKey if realm deselected
-		current_realm = CPp.ConnectedRealmsButton
-print("realm change "..current_realm)
-	end
---]]
-  if (realmName == nil) then
-    return;
-  end
-
-  if (CensusPlus_PTR ~= false) then
-    realmName = PTR_Color_ProblemRealmGuilds_check(realmName)
-  end                                              -- not PTR must be live
-
-  local stsrt, _, _ = string.find(realmName, '%(') -- strip off problem codes from Blizzards Portuguese realm if that has slipped through to this point
-  if stsrt ~= nil then
-    realmName = string.sub(realmName, 1, stsrt - 2)
-  end
-
-  -- connected realm memberships
-  local conmemcount = #CPp.VRealms
-  local connected_members = '';
-  CensusPlusConnected:SetText(CENSUSPLUS_CONNECTED);
-  CensusPlusConnected2:SetText(CENSUSPLUS_CONNECTED2);
-  CensusPlusConnected3:SetText(CENSUSPLUS_CONNECTED2);
-  for i = 1, conmemcount, 1 do
-    local button = _G['CensusPlusConnectedRealmButton' .. i]
-    local textField = 'CensusPlusConnectedRealmButton' .. i .. 'Text'
-    if ((CPp.VRealms[i] == nil) or (CPp.VRealms[i] == '')) then
-      _G[textField]:SetText(CENSUSPlus_BUTTON_REALMUNKNOWN);
-    else
-      if (i == CPp.ConnectedRealmsButton) then
-        _G[textField]:SetText('|cffffd200' .. CPp.VRealms[i] .. '|r');
-      else
-        _G[textField]:SetText(CPp.VRealms[i]);
-      end
-    end
-
-    --		connected_members = connected_members.."    "..CPp.VRealms[i]
+    return
   end
 
   local factionGroup, factionGName = UnitFactionGroup('player');
@@ -3977,77 +4015,23 @@ print("realm change "..current_realm)
     return; -- rework this area?.. if neutral display warn message elif display faction  ..or not needed handled in xml
   end
 
-  CensusPlusFactionName:SetText(format(CENSUSPLUS_FACTION, factionGName));
-
-  if (not (g_VariablesLoaded)) then -- if variables aren't loaded show partial window data and escape
-    return
+  local realmName, guildFrameTitle, accumulateGuildTotals = getRealmArguments(CPp.ConnectedRealmsButton)
+  g_AccumulateGuildTotals = accumulateGuildTotals
+  if (realmName == nil) then
+    return;
   end
 
-  if (CensusPlus_Database['Info']['Locale'] ~= nil) then
-    CensusPlusLocaleName:SetText(format(CENSUSPLUS_LOCALE,
-                                        CensusPlus_Database['Info']['Locale']));
-  end
+  setupFixedUiText(guildFrameTitle, factionGName, CensusPlus_Database['Info']['Locale'])
+  updateRealmButtonText(CPp.ConnectedRealmsButton)
+
   -- add realmKey to handle superset realm or individual member realm
-  local realmKey = nil; -- realmKey will equal one of  - nil = supersetRealm or member realm name
-  local guildKey = nil;
-  -- future plan to add guild realm as key for guild selector window.	
-  local guildRealmKey = nil;
-  local raceKey = nil;
-  local classKey = nil;
-  local levelKey = nil;
-  g_TotalCharacterXP = 0;
+  -- realmKey will equal one of  - nil = supersetRealm or member realm name
+  local realmKey = getSelectedRealmKey()
+  local guildKey, guildRealmKey = getSelectedGuildKey()
+  local raceKey = getSelectedRaceKey(factionGroup)
+  local classKey = getSelectedClassKey(factionGroup)
+  local levelKey = getSelectedLevelKey()
   g_TotalCount = 0;
-
-  --
-  -- Has user selected a realm
-  --
-  if (CPp.ConnectedRealmsButton ~= 0) then
-    realmKey = CPp.VRealms[CPp.ConnectedRealmsButton]
-    --		print("realmKey = "..realmKey)
-  end
-
-
-  --
-  -- Has the user selected a guild?
-  --
-  if (CPp.ConnectedRealmsButton ~= 0) then
-    if (CPp.GuildSelected ~= nil) then
-      guildRealmKey = CPp.VRealms[CPp.ConnectedRealmsButton]
-      --			print("grk = "..guildRealmKey)
-      guildKey = CPp.GuildSelected;
-      --			print("guid= "..guildKey)
-    else
-      guildKey = nil; -- force reset of guildKey if realm is deselected
-      --			print("guild = nil")
-    end
-  else
-    if (CPp.GuildSelected ~= nil) then
-      CPp.GuildSelected = nil;
-      guildKey = nil;      -- force reset of guildKey if realm is deselected
-      guildRealmKey = nil; -- force reset of guildRealmKey if realm deselected
-      --			current_realm = 0
-      --			print ("grk = nil")
-      --			print("guid= nil")
-    end
-  end
-
-  --
-  -- Has the user added any search criteria?
-  --
-
-  if (CPp.RaceSelected > 0) then
-    local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
-    raceKey = thisFactionRaces[CPp.RaceSelected];
-  end
-  if (CPp.ClassSelected > 0) then
-    local thisFactionClasses = CensusPlus_GetFactionClasses(factionGroup);
-    classKey = thisFactionClasses[CPp.ClassSelected];
-  end
-  if (CPp.LevelSelected > 0 or CPp.LevelSelected < 0) then
-    levelKey = CPp.LevelSelected;
-  end
-
-  --CP_profiling_timerstart =	debugprofilestop();
 
   --
   -- Get totals for this criteria
@@ -4165,7 +4149,7 @@ print("realm change "..current_realm)
     CensusPlus_ResetAccumulator();
     if ((raceKey == nil) or (raceKey == race)) then
       if (CPp.ConnectedRealmsButton == 0) then
-        for j = 1, conmemcount, 1 do
+        for j = 1, #CPp.VRealms, 1 do
           if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
             realmName = CPp.VRealms[j];
           else
@@ -4200,7 +4184,7 @@ print("realm change "..current_realm)
 --]]
         if (CPp.GuildSelected ~= nil) then
           --					print("Guilded Pre "..race.."  "..g_RaceCount[i])
-          for j = 1, conmemcount, 1 do
+          for j = 1, #CPp.VRealms, 1 do
             if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
               realmName = CPp.VRealms[j];
             else
@@ -4319,7 +4303,7 @@ print("realm change "..current_realm)
     CensusPlus_ResetAccumulator();
     if ((classKey == nil) or (classKey == class)) then
       if (CPp.ConnectedRealmsButton == 0) then
-        for j = 1, conmemcount, 1 do
+        for j = 1, #CPp.VRealms, 1 do
           if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
             realmName = CPp.VRealms[j];
           else
@@ -4439,7 +4423,7 @@ print("realm change "..current_realm)
     CensusPlus_ResetAccumulator();
     if ((levelKey == nil) or (levelKey == i) or (levelKey < 0 and levelKey + i ~= 0)) then
       if (CPp.ConnectedRealmsButton == 0) then
-        for j = 1, conmemcount, 1 do
+        for j = 1, #CPp.VRealms, 1 do
           if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
             realmName = CPp.VRealms[j];
           else
