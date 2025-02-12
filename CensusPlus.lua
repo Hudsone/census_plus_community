@@ -3715,12 +3715,52 @@ local function FindGuildByName(name)
 end
 
 ---Gets an accumulator for counting the number of characters.
----@param container table The result will be put to this container with the key `count`.
----@return function The accumulator function.
-local function getAccumulator(container)
-  container.count = 0;
-  return function()
+---
+---The returned `container.count` holds the count of total characters after
+---accumulating.
+---@return table container, function accumulator
+local function getAccumulator()
+  local container = {count = 0}
+  return container, function()
     container.count = container.count + 1;
+  end
+end
+
+local function addPlayerToList(...)
+  local name, level, guild, raceName, className, lastseen, realmName, guildRealm = ...
+  CensusPlus_AddPlayerToList(name, level, guild, raceName, className, lastseen,
+                             realmName, guildRealm)
+end
+
+---Adds guilds to CensusPlus_Guilds.
+---@param resideToRealm boolean Whether to only add guilds that reside on the same realm.
+---@param ... any Arguments from `CensusPlus_ForAllCharacters`.
+local function addGuildToList(resideToRealm, ...)
+  local name, level, guild, raceName, className, lastseen, realmName, guildRealm = ...
+  if (g_TotalCharacterXPPerLevel[level] == nil) then
+    InitConstantTables();
+  end
+  local totalCharacterXP = g_TotalCharacterXPPerLevel[level];
+  if (totalCharacterXP == nil) then
+    totalCharacterXP = 0;
+  end
+  -- `guild` seems never be nil.
+  if realmName == guildRealm or not resideToRealm then
+    local index = FindGuildByName(guild);
+    if (index == nil) then
+      local size = #CensusPlus_Guilds;
+      index = size + 1;
+      CensusPlus_Guilds[index] = {
+        m_Name = guild,
+        m_TotalCharacterXP = 0,
+        m_Count = 0,
+        m_GuildRealm = guildRealm,
+        m_GNfull = guild .. '-' .. guildRealm
+      };
+    end
+    local entry = CensusPlus_Guilds[index];
+    entry.m_TotalCharacterXP = entry.m_TotalCharacterXP + totalCharacterXP;
+    entry.m_Count = entry.m_Count + 1;
   end
 end
 
@@ -3990,6 +4030,86 @@ local function getSelectedLevelKey()
   return nil
 end
 
+local function isRealmSelected()
+  return CPp.ConnectedRealmsButton ~= 0
+end
+
+local function isRealmChanged()
+  return current_realm ~= CPp.ConnectedRealmsButton
+end
+
+local function updateCurrentRealm()
+  current_realm = CPp.ConnectedRealmsButton
+end
+
+---Updates totals for this criteria.
+---
+---The total count, guild list, and the player list will be updated.
+---@param realmKey string?
+---@param guildKey string?
+---@param guildRealmKey string?
+---@param raceKey string?
+---@param classKey string?
+---@param levelKey integer?
+---@param factionGroup string
+local function updateTotals(
+    realmKey,
+    guildKey,
+    guildRealmKey,
+    raceKey,
+    classKey,
+    levelKey,
+    factionGroup)
+  g_TotalCount = 0
+  CensusPlus_Guilds = {}
+  if (isRealmChanged()) then
+    CPp.GuildSelected = nil
+    updateCurrentRealm()
+  end
+  if not isRealmSelected() then -- doing superset .. no guild process
+    local container, accumulator = getAccumulator()
+    for _, realmName in ipairs(CPp.VRealms) do
+      if realmName ~= nil and realmName ~= '' then
+        CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey,
+                                    classKey, nil, levelKey,
+                                    nil, function(...)
+                                      accumulator()
+                                      addPlayerToList(...)
+                                    end)
+      end
+    end
+    g_TotalCount = container.count
+  elseif CPp.GuildSelected then -- Doing a single guild process.
+    -- A guild can contain members from different realms, so we need to search
+    -- all realms.
+    local container, accumulator = getAccumulator()
+    for _, realmName in ipairs(CPp.VRealms) do
+      if realmName ~= nil and realmName ~= '' then
+        CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey,
+                                    classKey, guildKey, levelKey,
+                                    guildRealmKey, function(...)
+                                      accumulator()
+                                      addPlayerToList(...)
+                                      addGuildToList(false, ...)
+                                    end)
+      end
+    end
+    g_TotalCount = container.count
+  else -- Doing a single realm process.
+    local container, accumulator = getAccumulator()
+    CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, classKey, nil,
+                                levelKey, nil, function(...)
+                                  accumulator()
+                                  addPlayerToList(...)
+                                  addGuildToList(true, ...)
+                                end)
+    g_TotalCount = container.count
+  end
+  if (#CensusPlus_Guilds > 1) then
+    table.sort(CensusPlus_Guilds, GuildPredicate)
+  end
+end
+
 --[[	-- Search the character database using the search criteria and update display
 --
   ]]
@@ -4015,13 +4135,15 @@ function CensusPlus_UpdateView()
     return; -- rework this area?.. if neutral display warn message elif display faction  ..or not needed handled in xml
   end
 
-  local realmName, guildFrameTitle, accumulateGuildTotals = getRealmArguments(CPp.ConnectedRealmsButton)
+  local realmName, guildFrameTitle, accumulateGuildTotals = getRealmArguments(
+    CPp.ConnectedRealmsButton)
   g_AccumulateGuildTotals = accumulateGuildTotals
   if (realmName == nil) then
     return;
   end
 
-  setupFixedUiText(guildFrameTitle, factionGName, CensusPlus_Database['Info']['Locale'])
+  setupFixedUiText(guildFrameTitle, factionGName,
+                   CensusPlus_Database['Info']['Locale'])
   updateRealmButtonText(CPp.ConnectedRealmsButton)
 
   -- add realmKey to handle superset realm or individual member realm
@@ -4031,79 +4153,9 @@ function CensusPlus_UpdateView()
   local raceKey = getSelectedRaceKey(factionGroup)
   local classKey = getSelectedClassKey(factionGroup)
   local levelKey = getSelectedLevelKey()
-  g_TotalCount = 0;
 
-  --
-  -- Get totals for this criteria
-  --
-  if (CPp.ConnectedRealmsButton ~= 0) then
-    if (current_realm ~= CPp.ConnectedRealmsButton) then
-      CensusPlus_Guilds = {};
-      g_AccumulateGuildTotals = true;
-      CPp.GuildSelected = nil
-      CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, classKey, nil,
-                                  levelKey, realmKey, TotalsAccumulator);
-      --			print("current "..current_realm)
-      current_realm = CPp.ConnectedRealmsButton
-      --						print("current "..current_realm)
-    else
-      if (CPp.GuildSelected ~= nil) then
-        CensusPlus_Guilds = {};
-        g_AccumulateGuildTotals = true;
-        local conmemcount = #CPp.VRealms
-        for i = 1, conmemcount, 1 do
-          if ((CPp.VRealms[i] ~= nil) and (CPp.VRealms[i] ~= '')) then
-            realmName = CPp.VRealms[i];
-            CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey,
-                                        classKey, guildKey, levelKey,
-                                        guildRealmKey, TotalsAccumulator);
-          end
-        end
-      else
-        CensusPlus_Guilds = {};
-        g_AccumulateGuildTotals = true;
-        --				CPp.GuildSelected = nil
-        CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, classKey,
-                                    nil, levelKey, realmKey, TotalsAccumulator);
-      end
-    end
-    if (CPp.EnableProfiling) then
-      CP_profiling_timerdiff = debugprofilestop() - CP_profiling_timerstart
-      CensusPlus_Msg('PROFILE: Time to do calcs 1 ' ..
-        CP_profiling_timerdiff / 1000000000);
-      --CP_profiling_timerstart =	debugprofilestop();
-    end
-
-    if ((guildKey == nil) and (guildRealmKey == nil) and (raceKey == nil) and (classKey == nil) and (levelKey == nil)) then
-      --		if ((guildKey == nil) and (guildRealmKey == nil)) then
-      local size = #CensusPlus_Guilds;
-      if (size) then
-        table.sort(CensusPlus_Guilds, GuildPredicate);
-      end
-    end
-
-    if (CPp.EnableProfiling) then
-      CP_profiling_timerdiff = debugprofilestop() - CP_profiling_timerstart
-      CensusPlus_Msg('PROFILE: Time to sort guilds ' ..
-        CP_profiling_timerdiff() / 1000000000);
-      --CP_profiling_timerstart =	debugprofilestop();
-    end
-
-
-    --	end
-  else -- doing superset .. no guild process
-    current_realm = 0
-    CensusPlus_Guilds = {};
-    g_AccumulateGuildTotals = nil;
-    local conmemcount = #CPp.VRealms
-    for i = 1, conmemcount, 1 do
-      if ((CPp.VRealms[i] ~= nil) and (CPp.VRealms[i] ~= '')) then
-        realmName = CPp.VRealms[i];
-        CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey, classKey,
-                                    nil, levelKey, nil, TotalsAccumulator);
-      end
-    end
-  end
+  updateTotals(realmKey, guildKey, guildRealmKey, raceKey, classKey, levelKey,
+               factionGroup)
 
   local levelSearch = nil;
   if (levelKey ~= nil) then
