@@ -173,7 +173,6 @@ local g_RaceCount = {};                         -- Totals for each race given se
 local g_ClassCount = {};                        -- Totals for each class given search criteria
 local g_LevelCount = {};                        -- Totals for each level given search criteria
 local g_AccumulatorCount = 0;
-local g_AccumulatorXPTotal = 0;
 local g_AccumulateGuildTotals = true; -- switch for guild work when scanning characters
 --[[
 --5.4 new tables
@@ -3867,7 +3866,6 @@ local function CensusPlus_Accumulator(name, level, guild)
   if (totalCharacterXP == nil or g_TotalCharacterXPPerLevel[level] == nil) then
     return;
   end
-  g_AccumulatorXPTotal = g_AccumulatorXPTotal + totalCharacterXP;
   g_AccumulatorCount = g_AccumulatorCount + 1;
 end
 
@@ -3877,7 +3875,6 @@ end
 
 local function CensusPlus_ResetAccumulator()
   g_AccumulatorCount = 0;
-  g_AccumulatorXPTotal = 0;
 end
 
 --[[ Virtual Realm membership accumulator
@@ -3923,11 +3920,26 @@ local function getIconTexture(raceClass)
   return normalTextureName
 end
 
+local function levelSearchText(levelKey)
+  local levelSearch = nil;
+  if (levelKey ~= nil) then
+    levelSearch = '  (' .. CENSUSPLUS_LEVEL .. ': ';
+    local level = levelKey;
+    if (levelKey < 0) then
+      levelSearch = levelSearch .. '!';
+      level = 0 - levelKey;
+    end
+    levelSearch = levelSearch .. level .. ')';
+  end
+  return levelSearch
+end
+
 ---Sets up the fixed UI text.
 ---@param guildFrameTitle string The guild frame title.
 ---@param factionGName string The faction group name.
 ---@param locale string? The locale code.
-local function setupFixedUiText(guildFrameTitle, factionGName, locale)
+---@param levelKey integer? The level key.
+local function setupFixedUiText(guildFrameTitle, factionGName, locale, levelKey)
   CensusPlusRealmName:SetText(CENSUSPLUS_REALMNAME)
   CensusPlusConnected:SetText(CENSUSPLUS_CONNECTED)
   CensusPlusConnected2:SetText(CENSUSPLUS_CONNECTED2)
@@ -3937,6 +3949,11 @@ local function setupFixedUiText(guildFrameTitle, factionGName, locale)
   if locale then
     CensusPlusLocaleName:SetText(format(CENSUSPLUS_LOCALE, locale))
   end
+  local levelSearch = levelSearchText(levelKey)
+  local totalCharactersText = format(CENSUSPLUS_TOTALCHAR, g_TotalCount) ..
+      (levelSearch or '')
+  CensusPlusTotalCharacters:SetText(totalCharactersText)
+  CensusPlusConsecutive:SetText(format(CENSUSPLUS_CONSECUTIVE, g_Consecutive))
 end
 
 ---Gets the selected realm arguments.
@@ -4142,10 +4159,6 @@ function CensusPlus_UpdateView()
     return;
   end
 
-  setupFixedUiText(guildFrameTitle, factionGName,
-                   CensusPlus_Database['Info']['Locale'])
-  updateRealmButtonText(CPp.ConnectedRealmsButton)
-
   -- add realmKey to handle superset realm or individual member realm
   -- realmKey will equal one of  - nil = supersetRealm or member realm name
   local realmKey = getSelectedRealmKey()
@@ -4154,39 +4167,12 @@ function CensusPlus_UpdateView()
   local classKey = getSelectedClassKey(factionGroup)
   local levelKey = getSelectedLevelKey()
 
+  setupFixedUiText(guildFrameTitle, factionGName,
+                   CensusPlus_Database['Info']['Locale'], levelKey)
+  updateRealmButtonText(CPp.ConnectedRealmsButton)
   updateTotals(realmKey, guildKey, guildRealmKey, raceKey, classKey, levelKey,
                factionGroup)
-
-  local levelSearch = nil;
-  if (levelKey ~= nil) then
-    levelSearch = '  (' .. CENSUSPLUS_LEVEL .. ': ';
-    local level = levelKey;
-    if (levelKey < 0) then
-      levelSearch = levelSearch .. '!';
-      level = 0 - levelKey;
-    end
-    levelSearch = levelSearch .. level .. ')';
-  end
-
-  local totalCharactersText = nil;
-  if (levelSearch ~= nil) then
-    totalCharactersText = format(CENSUSPLUS_TOTALCHAR, g_TotalCount) ..
-        levelSearch;
-  else
-    totalCharactersText = format(CENSUSPLUS_TOTALCHAR, g_TotalCount);
-  end
-  CensusPlusTotalCharacters:SetText(totalCharactersText);
-  CensusPlusConsecutive:SetText(format(CENSUSPLUS_CONSECUTIVE, g_Consecutive));
-  --	CensusPlusTotalCharacterXP:SetText(format(CENSUSPLUS_TOTALCHARXP, g_TotalCharacterXP));
   CensusPlus_UpdateGuildButtons();
-  --	current_realm = CPp.ConnectedRealmsButton
-  --	print(current_realm)
-  if (CPp.EnableProfiling) then
-    CP_profiling_timerdiff = debugprofilestop() - CP_profiling_timerstart
-    CensusPlus_Msg('PROFILE: Update Guilds ' ..
-      CP_profiling_timerdiff() / 1000000000);
-    --CP_profiling_timerstart =	debugprofilestop();
-  end
 
   --
   -- Accumulate totals for each race
