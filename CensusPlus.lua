@@ -173,7 +173,7 @@ local g_RaceCount = {};                         -- Totals for each race given se
 local g_ClassCount = {};                        -- Totals for each class given search criteria
 local g_LevelCount = {};                        -- Totals for each level given search criteria
 local g_AccumulatorCount = 0;
-local g_AccumulateGuildTotals = true; -- switch for guild work when scanning characters
+local g_AccumulateGuildTotals = true;           -- switch for guild work when scanning characters
 --[[
 --5.4 new tables
 CPp.VRealms ={realm1,realm2,realm3..realmN}  -- list of member realms found in Virtual realm set with each Census run.. realm1 is current realm all else is up in the air
@@ -3719,9 +3719,22 @@ end
 ---accumulating.
 ---@return table container, function accumulator
 local function getAccumulator()
-  local container = {count = 0}
-  return container, function()
+  local container = {count = 0, race = {}, class = {}, level = {}}
+  return container, function(...)
+    local name, level, guild, raceName, className, lastseen, realmName, guildRealm = ...
     container.count = container.count + 1;
+    if not container.race[raceName] then
+      container.race[raceName] = 0
+    end
+    container.race[raceName] = container.race[raceName] + 1
+    if not container.class[className] then
+      container.class[className] = 0
+    end
+    container.class[className] = container.class[className] + 1
+    if not container.level[level] then
+      container.level[level] = 0
+    end
+    container.level[level] = container.level[level] + 1
   end
 end
 
@@ -4069,6 +4082,7 @@ end
 ---@param classKey string?
 ---@param levelKey integer?
 ---@param factionGroup string
+---@return table accmulatedContainer The accumulated container, which contains {race, class, level} counts.
 local function updateTotals(
     realmKey,
     guildKey,
@@ -4079,6 +4093,7 @@ local function updateTotals(
     factionGroup)
   g_TotalCount = 0
   CensusPlus_Guilds = {}
+  local accmulatedContainer = nil
   if (isRealmChanged()) then
     CPp.GuildSelected = nil
     updateCurrentRealm()
@@ -4090,12 +4105,13 @@ local function updateTotals(
         CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey,
                                     classKey, nil, levelKey,
                                     nil, function(...)
-                                      accumulator()
+                                      accumulator(...)
                                       addPlayerToList(...)
                                     end)
       end
     end
     g_TotalCount = container.count
+    accmulatedContainer = container
   elseif CPp.GuildSelected then -- Doing a single guild process.
     -- A guild can contain members from different realms, so we need to search
     -- all realms.
@@ -4105,25 +4121,95 @@ local function updateTotals(
         CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey,
                                     classKey, guildKey, levelKey,
                                     guildRealmKey, function(...)
-                                      accumulator()
+                                      accumulator(...)
                                       addPlayerToList(...)
                                       addGuildToList(false, ...)
                                     end)
       end
     end
     g_TotalCount = container.count
+    accmulatedContainer = container
   else -- Doing a single realm process.
     local container, accumulator = getAccumulator()
     CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, classKey, nil,
                                 levelKey, nil, function(...)
-                                  accumulator()
+                                  accumulator(...)
                                   addPlayerToList(...)
                                   addGuildToList(true, ...)
                                 end)
     g_TotalCount = container.count
+    accmulatedContainer = container
   end
   if (#CensusPlus_Guilds > 1) then
     table.sort(CensusPlus_Guilds, GuildPredicate)
+  end
+  return accmulatedContainer
+end
+
+---Updates race / class bars.
+---@param buttonPrefix string The button prefix. E.g., 'CensusPlusRace'.
+---@param categoryList RACE[]|CLASS[] The category list.
+---@param countTable table<RACE|CLASS, integer> The count table.
+---@param selectedIndex integer The selected button index.
+local function updateCategoryBar(buttonPrefix, categoryList, countTable, selectedIndex)
+  local maxCount = 0
+  for _, v in pairs(countTable) do
+    if v > maxCount then
+      maxCount = v
+    end
+  end
+  for i, category in ipairs(categoryList) do
+    local buttonName = buttonPrefix .. 'Bar' .. i
+    local button = _G[buttonName]
+    local thisCount = countTable[category]
+    if thisCount and thisCount > 0 and maxCount > 0 then
+      local height = floor((thisCount / maxCount) * CensusPlus_MAXBARHEIGHT)
+      if height < 1 or height == nil then
+        height = 1
+      end
+      button:SetHeight(height)
+      button:Show()
+    else
+      button:Hide()
+    end
+    local normalTextureName = getIconTexture(category)
+    local legendName = buttonPrefix .. 'Legend' .. i
+    local legend = _G[legendName]
+    legend:SetNormalTexture(normalTextureName)
+    if selectedIndex == i then
+      legend:LockHighlight()
+    else
+      legend:UnlockHighlight()
+    end
+  end
+end
+
+local function updateLevelBar(countTable)
+  local maxCount = 0
+  for _, v in pairs(countTable) do
+    if v > maxCount then
+      maxCount = v
+    end
+  end
+  local logMaxCount = maxCount < 1.1 and log(2) or log(maxCount)
+  for i = MIN_CHARACTER_LEVEL, MAX_CHARACTER_LEVEL, 1 do
+    local height = 1
+    local buttonName = 'CensusPlusLevelBar' .. i
+    local button = _G[buttonName]
+    local thisCount = countTable[i]
+    if thisCount and thisCount > 0 and maxCount > 0 then
+      height = floor((log(thisCount + 0.5) / logMaxCount) * CensusPlus_MAXBARHEIGHT)
+      if CensusPlus_Database['Info']['UseLogBars'] == false or maxCount <= 10 then
+        height = floor((thisCount / maxCount) * CensusPlus_MAXBARHEIGHT)
+      end
+      if height < 1 or height == nil then
+        height = 1
+      end -- this happens when this count is at minimum (2) and maxCount > 250
+      button:SetHeight(height)
+      button:Show()
+    else
+      button:Hide()
+    end
   end
 end
 
@@ -4167,402 +4253,24 @@ function CensusPlus_UpdateView()
   local classKey = getSelectedClassKey(factionGroup)
   local levelKey = getSelectedLevelKey()
 
+  updateRealmButtonText(CPp.ConnectedRealmsButton)
+  local accumulatedContainer = updateTotals(realmKey, guildKey, guildRealmKey,
+                                            raceKey, classKey, levelKey,
+                                            factionGroup)
   setupFixedUiText(guildFrameTitle, factionGName,
                    CensusPlus_Database['Info']['Locale'], levelKey)
-  updateRealmButtonText(CPp.ConnectedRealmsButton)
-  updateTotals(realmKey, guildKey, guildRealmKey, raceKey, classKey, levelKey,
-               factionGroup)
   CensusPlus_UpdateGuildButtons();
-
-  --
-  -- Accumulate totals for each race
-  --
-  local maxCount = 0;
   local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
-  local numRaces = #thisFactionRaces;
-
-  for i = 1, numRaces, 1 do
-    local race = thisFactionRaces[i];
-    g_RaceCount[i] = 0;
-    CensusPlus_ResetAccumulator();
-    if ((raceKey == nil) or (raceKey == race)) then
-      if (CPp.ConnectedRealmsButton == 0) then
-        for j = 1, #CPp.VRealms, 1 do
-          if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
-            realmName = CPp.VRealms[j];
-          else
-            break
-          end
-          CensusPlus_ForAllCharacters(realmName, factionGroup, race, classKey,
-                                      nil, levelKey, nil, CensusPlus_Accumulator);
-        end
-        if (g_AccumulatorCount > maxCount) then
-          maxCount = g_AccumulatorCount;
-        end
-        g_RaceCount[i] = g_AccumulatorCount;
-        --				print("superset "..race.."  "..g_RaceCount[i])
-      else
-        --[[
-				if (realmKey == nil) then
-					realmp = "nil"
-				else
-					realmp = realmKey
-				end
-				if (guildKey == nil) then
-					guildkp = "nil"
-				else
-					guildkp = guildKey
-				end
-				if (guildRealmKey == nil) then
-					guildrkp = "nil"
-				else
-					guildrkp = guildRealmKey
-				end
-				print(realmp.."  "..guildkp.."  "..guildrkp)
---]]
-        if (CPp.GuildSelected ~= nil) then
-          --					print("Guilded Pre "..race.."  "..g_RaceCount[i])
-          for j = 1, #CPp.VRealms, 1 do
-            if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
-              realmName = CPp.VRealms[j];
-            else
-              break
-            end
-            CensusPlus_ForAllCharacters(realmName, factionGroup, race, classKey,
-                                        guildKey, levelKey, guildRealmKey,
-                                        CensusPlus_Accumulator);
-            --						print(realmName.." "..g_AccumulatorCount)
-          end
-          if (g_AccumulatorCount > maxCount) then
-            maxCount = g_AccumulatorCount;
-          end
-          g_RaceCount[i] = g_AccumulatorCount;
-          --					print("Guilded "..race.."  "..g_RaceCount[i])
-        else
-          CensusPlus_ForAllCharacters(realmKey, factionGroup, race, classKey, nil,
-                                      levelKey, nil, CensusPlus_Accumulator);
-          if (g_AccumulatorCount > maxCount) then
-            maxCount = g_AccumulatorCount;
-          end
-          g_RaceCount[i] = g_AccumulatorCount;
-          --					print("realm no guild "..race.." "..g_RaceCount[i])
-        end
-      end
-    end
-  end
-  --[[
-	if (CPp.ConnectedRealmsButton == 0) then	
-		for i = 1,conmemcount,1 do
-			if ((CPp.VRealms[i] ~= nil) and (CPp.VRealms[i] ~= "")) then
-				realmName = CPp.VRealms[i];
-			else
-				break
-			end
-			for i = 1, numRaces, 1 do
-				local race = thisFactionRaces[i];
-				CensusPlus_ResetAccumulator();
-				if ((raceKey == nil) or (raceKey == race)) then
-					CensusPlus_ForAllCharacters(realmName, factionGroup, race, classKey, nil, levelKey, nil, CensusPlus_Accumulator);
-				end
-				if (g_AccumulatorCount > maxCount) then
-					maxCount = g_AccumulatorCount;
-				end
-				g_RaceCount[i] = g_AccumulatorCount;
-			end
-				
---				CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey, classKey, nil, levelKey, nil, TotalsAccumulator);
---			end
-		end
-
-	else
-		for i = 1, numRaces, 1 do
-			local race = thisFactionRaces[i];
-			CensusPlus_ResetAccumulator();
-			if ((raceKey == nil) or (raceKey == race)) then
-				CensusPlus_ForAllCharacters(realmKey, factionGroup, race, classKey, guildKey, levelKey, guildRealmKey, CensusPlus_Accumulator);
-			end
-			if (g_AccumulatorCount > maxCount) then
-				maxCount = g_AccumulatorCount;
-			end
-			g_RaceCount[i] = g_AccumulatorCount;
-		end
-	
-	end
---]]
-  --
-  -- Update race bars
-  --
-  for i = 1, numRaces, 1 do
-    local race = thisFactionRaces[i];
-    local buttonName = 'CensusPlusRaceBar' .. i;
-
-    local button = _G[buttonName];
-    local thisCount = g_RaceCount[i];
-
-    if ((thisCount ~= nil) and (thisCount > 0) and (maxCount > 0)) then
-      local height = floor((thisCount / maxCount) * CensusPlus_MAXBARHEIGHT);
-      if (height < 1 or height == nil) then height = 1; end
-      button:SetHeight(height);
-      button:Show();
-    else
-      button:Hide();
-    end
-
-    local normalTextureName = getIconTexture(race)
-
-
-    local legendName = 'CensusPlusRaceLegend' .. i;
-    local legend = _G[legendName];
-    legend:SetNormalTexture(normalTextureName);
-    if (CPp.RaceSelected == i) then
-      legend:LockHighlight();
-    else
-      legend:UnlockHighlight();
-    end
-  end
-
-  if (CPp.EnableProfiling) then
-    CP_profiling_timerdiff = debugprofilestop() - CP_profiling_timerstart
-    CensusPlus_Msg('PROFILE: Update Races ' ..
-      CP_profiling_timerdiff / 1000000000);
-    --CP_profiling_timerstart =	debugprofilestop()
-  end
-
-  --
-  -- Accumulate totals for each class
-  --
-  local maxCount = 0;
+  updateCategoryBar('CensusPlusRace', thisFactionRaces, accumulatedContainer.race, CPp.RaceSelected)
   local thisFactionClasss = CensusPlus_GetFactionClasses(factionGroup);
-  local numClasses = #thisFactionClasss;
-
-  for i = 1, numClasses, 1 do
-    local class = thisFactionClasss[i];
-    g_ClassCount[i] = 0;
-    CensusPlus_ResetAccumulator();
-    if ((classKey == nil) or (classKey == class)) then
-      if (CPp.ConnectedRealmsButton == 0) then
-        for j = 1, #CPp.VRealms, 1 do
-          if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
-            realmName = CPp.VRealms[j];
-          else
-            break
-          end
-          CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey, class,
-                                      nil, levelKey, nil, CensusPlus_Accumulator);
-        end
-        if (g_AccumulatorCount > maxCount) then
-          maxCount = g_AccumulatorCount;
-        end
-        g_ClassCount[i] = g_AccumulatorCount;
-      else
-        if (CPp.GuildSelected ~= nil) then
-          local conmemcount = #CPp.VRealms
-          for j = 1, conmemcount, 1 do
-            if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
-              realmName = CPp.VRealms[j];
-            else
-              break
-            end
-            CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey, class,
-                                        guildKey, levelKey, guildRealmKey,
-                                        CensusPlus_Accumulator);
-            if (g_AccumulatorCount > maxCount) then
-              maxCount = g_AccumulatorCount;
-            end
-          end
-        else
-          CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, class, nil,
-                                      levelKey, nil, CensusPlus_Accumulator);
-        end
-        if (g_AccumulatorCount > maxCount) then
-          maxCount = g_AccumulatorCount;
-        end
-        g_ClassCount[i] = g_AccumulatorCount;
-      end
-    end
-  end
-
-  --[[	
-	if (CPp.ConnectedRealmsButton == 0) then	
-		for i = 1,conmemcount,1 do
-			if ((CPp.VRealms[i] ~= nil) and (CPp.VRealms[i] ~= "")) then
-				realmName = CPp.VRealms[i];
-			else
-				break
-			end
-			for i = 1, numClasses, 1 do
-				local class = thisFactionClasss[i];
-				CensusPlus_ResetAccumulator();
-				if ((classKey == nil) or (classKey == class)) then
-					CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey, class, nil, levelKey, nil, CensusPlus_Accumulator);
-				end
-				if (g_AccumulatorCount > maxCount) then
-					maxCount = g_AccumulatorCount;
-				end
-				g_ClassCount[i] = g_AccumulatorCount;
-			end
-		end
-	else
-		for i = 1, numClasses, 1 do
-			local class = thisFactionClasss[i];
-			CensusPlus_ResetAccumulator();
-			if ((classKey == nil) or (classKey == class)) then
-				CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, class, guildKey, levelKey, guildRealmKey, CensusPlus_Accumulator);
-			end
-			if (g_AccumulatorCount > maxCount) then
-				maxCount = g_AccumulatorCount;
-			end
-			g_ClassCount[i] = g_AccumulatorCount;
-		end
-	end
---]]
-
-  --
-  -- Update class bars
-  --
-  for i = 1, numClasses, 1 do
-    local class = thisFactionClasss[i];
-
-    local buttonName = 'CensusPlusClassBar' .. i;
-    local button = _G[buttonName];
-    local thisCount = g_ClassCount[i];
-    if ((thisCount ~= nil) and (thisCount > 0) and (maxCount > 0)) then
-      local height = floor((thisCount / maxCount) * CensusPlus_MAXBARHEIGHT);
-      if (height < 1 or height == nil) then height = 1; end
-      button:SetHeight(height);
-      button:Show();
-    else
-      button:Hide();
-    end
-
-    local normalTextureName = getIconTexture(class)
-    local legendName = 'CensusPlusClassLegend' .. i;
-    local legend = _G[legendName];
-    legend:SetNormalTexture(normalTextureName);
-    if (CPp.ClassSelected == i) then
-      legend:LockHighlight();
-    else
-      legend:UnlockHighlight();
-    end
-  end
-
-  if (CPp.EnableProfiling) then
-    CP_profiling_timerdiff = debugprofilestop() - CP_profiling_timerstart
-    CensusPlus_Msg('PROFILE: Update Classes ' ..
-      CP_profiling_timerdiff / 1000000000);
-    --CP_profiling_timerstart =	debugprofilestop()
-  end
-
-  --
-  -- Accumulate totals for each level
-  --
-  local maxCount = 0;
-  for i = 1, MAX_CHARACTER_LEVEL, 1 do
-    CensusPlus_ResetAccumulator();
-    if ((levelKey == nil) or (levelKey == i) or (levelKey < 0 and levelKey + i ~= 0)) then
-      if (CPp.ConnectedRealmsButton == 0) then
-        for j = 1, #CPp.VRealms, 1 do
-          if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
-            realmName = CPp.VRealms[j];
-          else
-            break
-          end
-          CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey, classKey,
-                                      nil, i, nil, CensusPlus_Accumulator);
-        end
-        if (g_AccumulatorCount > maxCount) then
-          maxCount = g_AccumulatorCount;
-        end
-        g_LevelCount[i] = g_AccumulatorCount;
-      else
-        if (CPp.GuildSelected ~= nil) then
-          local conmemcount = #CPp.VRealms
-          for j = 1, conmemcount, 1 do
-            if ((CPp.VRealms[j] ~= nil) and (CPp.VRealms[j] ~= '')) then
-              realmName = CPp.VRealms[j];
-            else
-              break
-            end
-            CensusPlus_ForAllCharacters(realmName, factionGroup, raceKey,
-                                        classKey, guildKey, i, guildRealmKey,
-                                        CensusPlus_Accumulator);
-            if (g_AccumulatorCount > maxCount) then
-              maxCount = g_AccumulatorCount;
-            end
-          end
-        else
-          CensusPlus_ForAllCharacters(realmKey, factionGroup, raceKey, classKey,
-                                      nil, i, nil, CensusPlus_Accumulator);
-        end
-        if (g_AccumulatorCount > maxCount) then
-          maxCount = g_AccumulatorCount;
-        end
-        g_LevelCount[i] = g_AccumulatorCount;
-      end
-    else
-      g_LevelCount[i] = 0;
-    end
-  end
-
-  local logMaxCount = 0  --
-  if maxCount < 1.1 then -- danger!! log(1) = 0   log(<1) = negative number
-    logMaxCount = log(2)
-  else
-    logMaxCount = log(maxCount)
-  end
-  --
-  --  To make the data easier to use, we need to massage it a bit for levels
-  --
-
-
-  --
-  -- Update level bars
-  --
-  for i = MIN_CHARACTER_LEVEL, MAX_CHARACTER_LEVEL, 1 do
-    local height = 1
-    local buttonName = 'CensusPlusLevelBar' .. i;
-    local buttonEmptyName = 'CensusPlusLevelBarEmpty' .. i;
-    local button = _G[buttonName];
-    local emptyButton = _G[buttonEmptyName];
-    local thisCount = g_LevelCount[i];
-    if ((thisCount ~= nil) and (thisCount > 0) and (maxCount > 0)) then
-      -- log(1) = 0 and it would make the level bar nearly invisible.
-      height = floor((log(thisCount + 0.5) / logMaxCount) *
-        CensusPlus_MAXBARHEIGHT);
-      if (CensusPlus_Database['Info']['UseLogBars'] == false or maxCount <= 10) then
-        height = floor(((thisCount) / maxCount) * CensusPlus_MAXBARHEIGHT);
-      end
-
-      if (height < 1 or height == nil) then
-        height = 1;
-      end -- this happens when this count is at minimum (2) and maxCount > 250
-      button:SetHeight(height);
-      button:Show();
-      if (emptyButton ~= nil) then
-        emptyButton:Hide();
-      end
-    else
-      button:Hide();
-      if (emptyButton ~= nil) then
-        emptyButton:SetHeight(CensusPlus_MAXBARHEIGHT);
-        emptyButton:Show();
-      end
-    end
-  end
-
-  if (CPp.EnableProfiling) then
-    CP_profiling_timerdiff = debugprofilestop() - CP_profiling_timerstart
-    CensusPlus_Msg('PROFILE: Update Levels ' ..
-      CP_profiling_timerdiff / 1000000000);
-    --CP_profiling_timerstart =	debugprofilestop()	
-  end
-
+  updateCategoryBar('CensusPlusClass', thisFactionClasss, accumulatedContainer.class, CPp.ClassSelected)
+  updateLevelBar(accumulatedContainer.level)
   if (CP_PlayerListWindow:IsVisible()) then
     CensusPlus_PlayerListOnShow();
   end
-
-
-  --CP_profiling_timerstart =	debugprofilestop()
+  g_RaceCount = accumulatedContainer.race
+  g_ClassCount = accumulatedContainer.class
+  g_LevelCount = accumulatedContainer.level
 end
 
 --[[	-- Walk the character database and call the callback function for every entry that matches the search criteria
@@ -4681,7 +4389,7 @@ function CensusPlus_OnEnterRace(self, motion) -- referenced by CensusPlus.xml
     local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
     local id = self:GetID();
     local raceName = NLZN.T(thisFactionRaces[id]);
-    local count = g_RaceCount[id];
+    local count = g_RaceCount[thisFactionRaces[id]];
     if (count ~= nil) and (g_TotalCount > 0) then
       local percent = floor((count / g_TotalCount) * 100);
       GameTooltip:SetOwner(self, 'ANCHOR_RIGHT');
@@ -4706,8 +4414,8 @@ function CensusPlus_OnEnterClass(self, motion) -- referenced by CensusPlus.xml
     local factionGroup = UnitFactionGroup('player');
     local thisFactionClasses = CensusPlus_GetFactionClasses(factionGroup);
     local id = self:GetID();
-    local className = thisFactionClasses[id];
-    local count = g_ClassCount[id];
+    local className = NLZN.T(thisFactionClasses[id]);
+    local count = g_ClassCount[thisFactionClasses[id]];
     if (count ~= nil) and (g_TotalCount > 0) then
       local percent = floor((count / g_TotalCount) * 100);
       GameTooltip:SetOwner(self, 'ANCHOR_RIGHT');
