@@ -67,7 +67,7 @@ local CensusPlus_Version_Major = '8'; -- changing this number will force a saved
 local CensusPlus_Version_Minor = '0'; -- changing this number will force a saved data purge
 local CensusPlus_Version_Maint = '5';
 ]]
-local projectVersion = '8.1.8'
+local projectVersion = '8.1.9'
 local versionNumbers = strsplittable('.', projectVersion)
 local CensusPlus_Version_Major = versionNumbers[1]
 local CensusPlus_Version_Minor = versionNumbers[2]
