@@ -978,31 +978,6 @@
           </OnLeave>
         </Scripts>
       </Button>
-      <Button name="CensusPlusWhoButton"
-              inherits="UIPanelButtonTemplate"
-              hidden="true"
-              text="ManualWho">
-        <Size>
-          <AbsDimension x="128"
-                        y="21" />
-        </Size>
-        <Anchors>
-          <Anchor point="TOPLEFT"
-                  relativeTo="CensusPlusStopButton">
-            <Offset>
-              <AbsDimension x="134"
-                            y="0" />
-            </Offset>
-          </Anchor>
-        </Anchors>
-        <Scripts>
-          <OnClick function="CENSUSPLUS_MANUALWHO" />
-          <OnEnter function="CENSUSPLUS_MANUALWHO_OnEnter" />
-          <OnLeave>            
-            GameTooltip:Hide();
-          </OnLeave>
-        </Scripts>
-      </Button>
       <Button name="CensusPlusPruneButton"
               inherits="UIPanelButtonTemplate"
               text="CENSUSPLUS_PRUNE">

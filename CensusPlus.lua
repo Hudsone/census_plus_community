@@ -173,7 +173,6 @@ local g_RaceCount = {};                         -- Totals for each race given se
 local g_ClassCount = {};                        -- Totals for each class given search criteria
 local g_LevelCount = {};                        -- Totals for each level given search criteria
 local g_AccumulatorCount = 0;
-local g_AccumulateGuildTotals = true;           -- switch for guild work when scanning characters
 --[[
 --5.4 new tables
 CPp.VRealms ={realm1,realm2,realm3..realmN}  -- list of member realms found in Virtual realm set with each Census run.. realm1 is current realm all else is up in the air
@@ -202,8 +201,7 @@ CPp.ClassSelected                       = 0;   -- Search criteria: Currently sel
 CPp.LevelSelected                       = 0;
 local current_realm                     = 0;
 
-local g_LastOnUpdateTime                = 0;     -- Last time OnUpdate was called
-local g_WaitingForWhoUpdate             = false; -- Are we waiting for a who update event?
+local g_LastOnUpdateTime                = 0; -- Last time OnUpdate was called
 
 local g_factionGroup                    =
 'Neutral'                                        -- Faction of character running census. used to select/verify correct faction of race
@@ -1201,36 +1199,6 @@ function CensusPlus_OnLoad(self) -- referenced by CensusPlus.xml
 	]]
   local updateFrame = CreateFrame('Frame');
   updateFrame:SetScript('OnUpdate', CensusPlus_OnUpdate);
-
-  local bc = SetBindingClick('SHIFT-Z', CensusPlusWhoButton:GetName())
-  --		if bc then print("key bound") else print("bind failed") end
-  CensusPlusWhoButton:SetScript('OnClick', function(self, button, down)
-    -- As we have not specified the button argument to SetBindingClick,
-    -- the binding will be mapped to a LeftButton click.
-    ManualWho()
-  end)
-end
-
-function InitializeExperimental()
-  --print("InitializeExperimental")
-
-  hookClickables = CensusPlus_Database['Info']['UseInterfaceClicks']
-  hookWorldClicks = CensusPlus_Database['Info']['UseWorldFrameClicks']
-
-  if hookClickables then
-    for i, v in pairs(_G) do
-      if type(v) == 'table' and v['Click'] ~= nil and v['HookScript'] ~= nil then
-        v:HookScript('OnClick', function(self, button)
-          ManualWho()
-        end)
-      end
-    end
-  end
-  if hookWorldClicks then
-    WorldFrame:HookScript('OnMouseDown', function(self, button)
-      ManualWho()
-    end)
-  end
 end
 
 local function shuffle(arr)
@@ -1275,7 +1243,6 @@ function CP_ProcessWhoEvent(query, result)
     --	    print("no results returned")
     local whoText = CensusPlus_CreateWhoText(g_CurrentJob);
     if whoText and whoText == query then
-      g_WaitingForWhoUpdate = false
       whoquery_active = false
       whoquery_answered = false
     end
@@ -1286,109 +1253,91 @@ function CP_ProcessWhoEvent(query, result)
 
   CensusPlus_ProcessWhoResults(result, numWhoResults)
 
-  if not complete then
-    --[[
+  if complete then return end
+
+  --[[
 		-- Who list is overflowed, split the query to make the return smaller
 		--
 		]]
-    local minLevel = g_CurrentJob.m_MinLevel;
-    local maxLevel = g_CurrentJob.m_MaxLevel;
-    local race = g_CurrentJob.m_Race;
-    local class = g_CurrentJob.m_Class;
-    local zoneLetter = g_CurrentJob.m_zoneLetter;
-    local letter = g_CurrentJob.m_Letter;
 
-    if (minLevel ~= maxLevel) then
-      --[[
+  local minLevel = g_CurrentJob.m_MinLevel;
+  local maxLevel = g_CurrentJob.m_MaxLevel;
+  local race = g_CurrentJob.m_Race;
+  local class = g_CurrentJob.m_Class;
+  local letter = g_CurrentJob.m_Letter;
+  local level = minLevel;
+
+  if (minLevel ~= maxLevel) then
+    --[[
 			-- The level range is greater than a single level, so split it in half and submit the two jobs
 			--
 			]]
-      local pivot = floor((minLevel + maxLevel) / 2);
-      local jobLower = CensusPlus_CreateJob(minLevel, pivot, nil, nil, nil);
-      InsertJobIntoQueue(jobLower);
-      local jobUpper = CensusPlus_CreateJob(pivot + 1, maxLevel, nil, nil, nil);
-      InsertJobIntoQueue(jobUpper);
-    else
-      --[[
-			-- We cannot split the level range any more
-			--
-			]]
-
-      local factionGroup = UnitFactionGroup('player');
-      local level = minLevel;
-      if (race == nil) then
-        --[[
+    local pivot = floor((minLevel + maxLevel) / 2);
+    local jobLower = CensusPlus_CreateJob(minLevel, pivot, nil, nil, nil);
+    InsertJobIntoQueue(jobLower);
+    local jobUpper = CensusPlus_CreateJob(pivot + 1, maxLevel, nil, nil, nil);
+    InsertJobIntoQueue(jobUpper);
+  elseif (race == nil) then
+    --[[
 				-- This job does not specify race, so split it that way, making jobs for each race
 				--
 				]]
-        local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
-        local numRaces = #thisFactionRaces;
-        for _, i in ipairs(shuffled_numbers(numRaces)) do
-          local job = CensusPlus_CreateJob(level, level, thisFactionRaces[i], nil,
-                                           nil);
-          InsertJobIntoQueue(job);
-        end
-      else
-        if (class == nil) then
-          --[[
+    local factionGroup = UnitFactionGroup('player');
+    local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
+    local numRaces = #thisFactionRaces;
+    for _, i in ipairs(shuffled_numbers(numRaces)) do
+      local job = CensusPlus_CreateJob(level, level, thisFactionRaces[i], nil,
+                                       nil);
+      InsertJobIntoQueue(job);
+    end
+  elseif (class == nil) then
+    --[[
 					-- This job does not specify class, so split it that way, making jobs for each class
 					--
 					]]
-          local thisRaceClasses = GetRaceClasses(race);
-          local numClasses = #thisRaceClasses;
-          --					print(numClasses);
-          for _, i in ipairs(shuffled_numbers(numClasses)) do
-            --					print(thisRaceClasses[i]);
-            local job = CensusPlus_CreateJob(level, level, race,
-                                             thisRaceClasses[i], nil);
-            InsertJobIntoQueue(job);
-          end
-        else
-          if (letter == nil) then
-            --[[
+    local thisRaceClasses = GetRaceClasses(race);
+    local numClasses = #thisRaceClasses;
+    --					print(numClasses);
+    for _, i in ipairs(shuffled_numbers(numClasses)) do
+      --					print(thisRaceClasses[i]);
+      local job = CensusPlus_CreateJob(level, level, race,
+                                       thisRaceClasses[i], nil);
+      InsertJobIntoQueue(job);
+    end
+  elseif (letter == nil) then
+    --[[
 						-- There are too many characters with a single level, class and race
 						--     The work around we are going to pursue is to check by name for a,e,i,o,r,s,t,u
 						--
 						]]
-            --						print("the dreaded letter splits")
-            local letters = {}
-            if CP_letterselect == 0 then
-              letters = GetNameLetters()
-            elseif CP_letterselect == 1 then
-              letters = GetNameLetters1()
-            elseif CP_letterselect == 2 then
-              letters = GetNameLetters2()
-            end
+    --						print("the dreaded letter splits")
+    local letters = {}
+    if CP_letterselect == 0 then
+      letters = GetNameLetters()
+    elseif CP_letterselect == 1 then
+      letters = GetNameLetters1()
+    elseif CP_letterselect == 2 then
+      letters = GetNameLetters2()
+    end
 
-            for i = 1, #letters, 1 do
-              local job = CensusPlus_CreateJob(level, level, race, class,
-                                               letters[i]);
-              InsertJobIntoQueue(job);
-            end
+    for i = 1, #letters, 1 do
+      local job = CensusPlus_CreateJob(level, level, race, class,
+                                       letters[i]);
+      InsertJobIntoQueue(job);
+    end
 
-            --Block of code removed that isn't currently or ever used.. splitting by zone
-            --     this commented out section was confusing my editor's code folding routines
-          else
-            --[[
+    --Block of code removed that isn't currently or ever used.. splitting by zone
+    --     this commented out section was confusing my editor's code folding routines
+  else
+    --[[
 						-- There are too many characters with a single level, class, race and letter, give up
 						--
 						]]
 
-            local whoText = CensusPlus_CreateWhoText(g_CurrentJob);
-            if (g_Verbose == true) then
-              CensusPlus_Msg(format(CENSUSPLUS_TOOMANY, whoText));
-            end
-          end
-        end
-      end
+    local whoText = CensusPlus_CreateWhoText(g_CurrentJob);
+    if (g_Verbose == true) then
+      CensusPlus_Msg(format(CENSUSPLUS_TOOMANY, whoText));
     end
-  else
-  end
-
-  local whoText = CensusPlus_CreateWhoText(g_CurrentJob);
-
-  if whoText == query then
-    g_WaitingForWhoUpdate = false
   end
 end
 
@@ -1952,17 +1901,6 @@ function CENSUSPLUS_STOP_OnEnter(self, motion) -- referenced by CensusPlus.xml
   end
 end
 
--- referenced by CensusPlusClassic.xml
-function CENSUSPLUS_MANUALWHO_OnEnter(self, motion)
-  if (motion == true) then
-    GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
-    GameTooltip:SetText('Issues manual who request.', 1.0, 1.0, 1.0)
-    GameTooltip:Show()
-    -- frame created underneath cursor.. not cursor movement to frame
-  else
-  end
-end
-
 function CensusPlus_TimerSet(self, minutes, ovrride)
   if minutes == nil then
     minutes = 30
@@ -2141,7 +2079,6 @@ if more then x time then dump queues and restart as new start else set below sta
                                          nil, nil, meplayer)
         InsertJobIntoQueue(job)
         CPp.IsCensusPlusInProgress = true;
-        g_WaitingForWhoUpdate = false;
         CPp.CensusPlusManuallyPaused = false;
 
         local hour, minute = GetGameTime();
@@ -2183,7 +2120,6 @@ if more then x time then dump queues and restart as new start else set below sta
 
 
       CPp.IsCensusPlusInProgress = true;
-      g_WaitingForWhoUpdate = false;
       CPp.CensusPlusManuallyPaused = false;
 
       local hour, minute = GetGameTime();
@@ -2295,11 +2231,6 @@ function CENSUSPLUS_STOPCENSUS() -- referenced by CensusPlus.xml
   -- Add revert CensusButton back to defauit
   CensusButton:SetNormalFontObject(GameFontNormal)
   CensusButton:SetText('C+')
-end
-
-function CENSUSPLUS_MANUALWHO()
-  print('istsecure() = ', issecure())
-  ManualWho()
 end
 
 --[[	-- Display Census results
@@ -2485,7 +2416,6 @@ function CensusPlus_OnEvent(self, event, ...) -- referenced by CensusPlus.xml
       self:UnregisterEvent('PLAYER_ENTERING_WORLD')
       if (g_addon_loaded) and (g_player_loaded) then
         CensusPlus_InitializeVariables()
-        -- InitializeExperimental()
       end
     end
   end
@@ -2985,7 +2915,6 @@ function CensusPlus_OnUpdate() -- referenced by CensusPlus.xml
         g_CurrentJob = nil;
 
         g_CurrentJob = job;
-        g_WaitingForWhoUpdate = true;
 
         CensusPlus_SendWho(whoText);
         g_WhoAttempts = 0;
@@ -3066,8 +2995,6 @@ function CensusPlus_OnUpdate() -- referenced by CensusPlus.xml
         end
         if (g_WhoAttempts < 2) then
           CensusPlus_Msg2(whoText .. ' repeat needed');
-        else
-          g_WaitingForWhoUpdate = false;
         end
       end
       --		  		return    -- server hasn't returned query.. so wait for next frame update
@@ -3776,57 +3703,6 @@ local function addGuildToList(resideToRealm, ...)
   end
 end
 
---[[	-- Add up the total character XP and count
---
-  ]]
-
-local function TotalsAccumulator(
-    name,
-    level,
-    guild,
-    raceName,
-    className,
-    lastseen,
-    realmName,
-    guildRealm)
-  g_TotalCount = g_TotalCount + 1;
-  --
-  --  Add character to our player list
-  --
-  --	print(name.." ".. level.." "..className.." "..raceName.." "..realmName.." "..guild.." "..guildRealm.." "..lastseen)
-  if (g_AccumulateGuildTotals) then
-    CensusPlus_AddPlayerToList(name, level, guild, raceName, className, lastseen,
-                               realmName, guildRealm);
-  end
-
-  if (g_TotalCharacterXPPerLevel[level] == nil) then
-    InitConstantTables();
-  end
-
-  local totalCharacterXP = g_TotalCharacterXPPerLevel[level];
-  if (totalCharacterXP == nil) then
-    totalCharacterXP = 0;
-  end
-  --	print("g_TCount = "..g_TotalCount.." "..guild)
-  if (g_AccumulateGuildTotals and (guild ~= nil)) then
-    local index = FindGuildByName(guild);
-    if (index == nil) then
-      local size = #CensusPlus_Guilds;
-      index = size + 1;
-      CensusPlus_Guilds[index] = {
-        m_Name = guild,
-        m_TotalCharacterXP = 0,
-        m_Count = 0,
-        m_GuildRealm = guildRealm,
-        m_GNfull = guild .. '-' .. guildRealm
-      };
-    end
-    local entry = CensusPlus_Guilds[index];
-    entry.m_TotalCharacterXP = entry.m_TotalCharacterXP + totalCharacterXP;
-    entry.m_Count = entry.m_Count + 1;
-  end
-end
-
 --[[	-- Predicate function which can be used to compare two guilds for sorting
 --
   ]]
@@ -3973,17 +3849,15 @@ end
 ---
 ---Depends on whether the guild button is toggled, return different realm arguments.
 ---@param connectedRealmsButton integer The realm button ID that was toggled. 0 denotes that no realm button is toggled.
----@return string? realmName, string guildFrameTitle, boolean accumulateGuildTotals
+---@return string? realmName, string guildFrameTitle
 local function getRealmArguments(connectedRealmsButton)
   local realmName, guildFrameTitle, accumulateGuildTotal = '', '', false
   if connectedRealmsButton == 0 then
     realmName = CPp.CensusPlusLocale .. GetRealmName()
     guildFrameTitle = CENSUSPLUS_GETGUILD
-    accumulateGuildTotal = false
   else
     realmName = CPp.VRealms[connectedRealmsButton]
     guildFrameTitle = CENSUSPLUS_TOPGUILD
-    accumulateGuildTotal = true
   end
   if realmName ~= nil then
     if (CensusPlus_PTR ~= false) then
@@ -3994,7 +3868,7 @@ local function getRealmArguments(connectedRealmsButton)
       realmName = string.sub(realmName, 1, stsrt - 2)
     end
   end
-  return realmName, guildFrameTitle, accumulateGuildTotal
+  return realmName, guildFrameTitle
 end
 
 ---Updates the realm button text.
@@ -4151,7 +4025,11 @@ end
 ---@param categoryList RACE[]|CLASS[] The category list.
 ---@param countTable table<RACE|CLASS, integer> The count table.
 ---@param selectedIndex integer The selected button index.
-local function updateCategoryBar(buttonPrefix, categoryList, countTable, selectedIndex)
+local function updateCategoryBar(
+    buttonPrefix,
+    categoryList,
+    countTable,
+    selectedIndex)
   local maxCount = 0
   for _, v in pairs(countTable) do
     if v > maxCount then
@@ -4198,7 +4076,8 @@ local function updateLevelBar(countTable)
     local button = _G[buttonName]
     local thisCount = countTable[i]
     if thisCount and thisCount > 0 and maxCount > 0 then
-      height = floor((log(thisCount + 0.5) / logMaxCount) * CensusPlus_MAXBARHEIGHT)
+      height = floor((log(thisCount + 0.5) / logMaxCount) *
+        CensusPlus_MAXBARHEIGHT)
       if CensusPlus_Database['Info']['UseLogBars'] == false or maxCount <= 10 then
         height = floor((thisCount / maxCount) * CensusPlus_MAXBARHEIGHT)
       end
@@ -4238,9 +4117,8 @@ function CensusPlus_UpdateView()
     return; -- rework this area?.. if neutral display warn message elif display faction  ..or not needed handled in xml
   end
 
-  local realmName, guildFrameTitle, accumulateGuildTotals = getRealmArguments(
+  local realmName, guildFrameTitle = getRealmArguments(
     CPp.ConnectedRealmsButton)
-  g_AccumulateGuildTotals = accumulateGuildTotals
   if (realmName == nil) then
     return;
   end
@@ -4261,9 +4139,11 @@ function CensusPlus_UpdateView()
                    CensusPlus_Database['Info']['Locale'], levelKey)
   CensusPlus_UpdateGuildButtons();
   local thisFactionRaces = CensusPlus_GetFactionRaces(factionGroup);
-  updateCategoryBar('CensusPlusRace', thisFactionRaces, accumulatedContainer.race, CPp.RaceSelected)
+  updateCategoryBar('CensusPlusRace', thisFactionRaces, accumulatedContainer
+                    .race, CPp.RaceSelected)
   local thisFactionClasss = CensusPlus_GetFactionClasses(factionGroup);
-  updateCategoryBar('CensusPlusClass', thisFactionClasss, accumulatedContainer.class, CPp.ClassSelected)
+  updateCategoryBar('CensusPlusClass', thisFactionClasss,
+                    accumulatedContainer.class, CPp.ClassSelected)
   updateLevelBar(accumulatedContainer.level)
   if (CP_PlayerListWindow:IsVisible()) then
     CensusPlus_PlayerListOnShow();
