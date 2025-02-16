@@ -937,6 +937,13 @@ local function GetNameLetters2()
   return {'a', 'e', 'r', 'i', 'n', 'o', 'l', 's', 't', 'h', 'd', 'u'}
 end
 
+local function resetCensusJobs()
+  CensusPlus_JobQueue = {};
+  CensusPlus_JobQueue.g_NumNewCharacters = 0;
+  CensusPlus_JobQueue.g_NumUpdatedCharacters = 0;
+  CensusPlus_JobQueue.g_TempCount = nil;
+  CensusPlus_JobQueue.g_TempCount = {};
+end
 
 --[[	-- Called when the main window is shown
 --
@@ -2008,12 +2015,8 @@ if more then x time then dump queues and restart as new start else set below sta
     g_FirstRun = false;
   else
     --		print ("Start new Census");
-    CensusPlus_JobQueue = {};
-    CensusPlus_JobQueue.g_NumNewCharacters = 0;
-    CensusPlus_JobQueue.g_NumUpdatedCharacters = 0;
+    resetCensusJobs()
     CensusPlus_Zero_g_TimeDatabase();
-    CensusPlus_JobQueue.g_TempCount = nil;
-    CensusPlus_JobQueue.g_TempCount = {};
     CPp.VRealms = nil;
     CPp.VRealms = {};
   end
@@ -2218,9 +2221,7 @@ function CENSUSPLUS_STOPCENSUS() -- referenced by CensusPlus.xml
 
 
     CensusPlus_DisplayResults();
-    CensusPlus_JobQueue = {};
-    --		CensusPlus_JobQueue = nil;
-    --		CensusPlus_JobQueue = {};
+    resetCensusJobs()
 
     --  Clean up the times
     CENSUSPLUS_PRUNETimes();
