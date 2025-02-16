@@ -1272,6 +1272,7 @@ function CP_ProcessWhoEvent(query, result)
   local race = g_CurrentJob.m_Race;
   local class = g_CurrentJob.m_Class;
   local letter = g_CurrentJob.m_Letter;
+  local zone = g_CurrentJob.m_Zone;
   local level = minLevel;
 
   if (minLevel ~= maxLevel) then
@@ -1310,6 +1311,18 @@ function CP_ProcessWhoEvent(query, result)
       local job = CensusPlus_CreateJob(level, level, race,
                                        thisRaceClasses[i], nil);
       InsertJobIntoQueue(job);
+    end
+  elseif (zone == nil) then
+    local shownZones = {}
+    for _, whoInfo in ipairs(result) do
+      shownZones[whoInfo.area] = (shownZones[whoInfo.area] or 0) + 1
+    end
+    for shownZone, count in pairs(shownZones) do
+      if count > 1 then
+        local job = CensusPlus_CreateJob(level, level, race, class, nil,
+                                         shownZone)
+        InsertJobIntoQueue(job)
+      end
     end
   elseif (letter == nil) then
     --[[
@@ -2301,6 +2314,11 @@ function CensusPlus_CreateWhoText(job)
     whoText = whoText .. ' n-' .. letter;
   end
 
+  local zone = job.m_Zone;
+  if (zone ~= nil) then
+    whoText = whoText .. ' z-"' .. zone .. '"';
+  end
+
   local minLevel = tostring(job.m_MinLevel);
   if (minLevel == nil) then
     minLevel = '1';
@@ -2311,12 +2329,6 @@ function CensusPlus_CreateWhoText(job)
   end
   whoText = whoText .. ' ' .. minLevel .. '-' .. maxLevel;
 
-  local zoneLetter = job.m_zoneLetter;
-  if (zoneLetter ~= nil) then
-    whoText = whoText .. ' z-' .. zoneLetter;
-  end
-
-
   return whoText;
 end
 
@@ -2324,13 +2336,14 @@ end
 --
   ]]
 
-function CensusPlus_CreateJob(minLevel, maxLevel, race, class, letter)
+function CensusPlus_CreateJob(minLevel, maxLevel, race, class, letter, zone)
   local job      = {};
   job.m_MinLevel = minLevel;
   job.m_MaxLevel = maxLevel;
   job.m_Race     = race;
   job.m_Class    = class;
   job.m_Letter   = letter;
+  job.m_Zone     = zone;
 
   CensusPlus_DumpJob(job);
 
