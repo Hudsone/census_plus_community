@@ -62,13 +62,13 @@ CPp.TZWarningSent = false;                    -- not used?
 --
 ]]
 
-local projectVersion = '8.1.10'
+local projectVersion = '8.1.11'
 local versionNumbers = strsplittable('.', projectVersion)
 local CensusPlus_Version_Major = versionNumbers[1]
 local CensusPlus_Version_Minor = versionNumbers[2]
 local CensusPlus_Version_Maint = versionNumbers[3]
 
-local CensusPlus_SubVersion = ' >=WoW.11.0.7';
+local CensusPlus_SubVersion = ' >=WoW.11.1';
 --local CensusPlus_VERSION = "WoD"
 local CensusPlus_VERSION = CensusPlus_Version_Major ..
     '.' .. CensusPlus_Version_Minor .. '.' .. CensusPlus_Version_Maint;
