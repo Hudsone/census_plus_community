@@ -1,4 +1,4 @@
-## Interface: 110100
+## Interface: 110150
 ## Version: @project-version@
 ## Title: CensusPlus
 ## IconTexture: Interface\AddOns\CensusPlus\Skin\Logo
