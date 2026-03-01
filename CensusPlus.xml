@@ -35,8 +35,8 @@
   <Frame name="CensusPlusVersionTagTemplate"
          mixin="CensusPlusVersionTagMixin"
          virtual="true">
-    <Size x="0"
-          y="0" />
+    <!-- Required to have text seen. I forgot how the value was chosen. -->
+    <Size y="20" />
     <Layers>
       <Layer level="OVERLAY">
         <FontString parentKey="Version"
@@ -46,7 +46,7 @@
           <Anchors>
             <Anchor point="TOPRIGHT"
                     x="0"
-                    y="266" />
+                    y="376" />
           </Anchors>
         </FontString>
         <FontString parentKey="Edition"
@@ -61,7 +61,7 @@
           <Anchors>
             <Anchor point="TOPRIGHT"
                     x="0"
-                    y="280" />
+                    y="390" />
           </Anchors>
         </FontString>
       </Layer>

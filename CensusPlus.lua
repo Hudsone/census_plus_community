@@ -5219,8 +5219,6 @@ function CensusPlusBlizzardOptions()
     Settings.CreateSlider(category, setting, options, tooltip)
   end
 
-  layout:AddInitializer(Settings.CreateElementInitializer(
-    'CensusPlusVersionTagTemplate', {version = CensusPlus_VERSION_FULL}))
   layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(
     CENSUSPLUS_SPECIAL_THANKS))
   local specialThanksList = {
@@ -5231,6 +5229,10 @@ function CensusPlusBlizzardOptions()
     layout:AddInitializer(Settings.CreateElementInitializer(
       'CensusPlusOptionPlainTextTemplate', {text = name .. ' - ' .. desc}))
   end
+
+  layout:AddInitializer(Settings.CreateElementInitializer(
+    'CensusPlusVersionTagTemplate', {version = CensusPlus_VERSION_FULL}))
+
   Settings.RegisterAddOnCategory(category)
   CensusPlus_OptionCategory = category
 end
