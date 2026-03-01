@@ -68,7 +68,7 @@ local CensusPlus_Version_Major = versionNumbers[1]
 local CensusPlus_Version_Minor = versionNumbers[2]
 local CensusPlus_Version_Maint = versionNumbers[3]
 
-local CensusPlus_SubVersion = ' >=WoW.11.1.5';
+local CensusPlus_SubVersion = ' >=WoW.12.0.0';
 --local CensusPlus_VERSION = "WoD"
 local CensusPlus_VERSION = CensusPlus_Version_Major ..
     '.' .. CensusPlus_Version_Minor .. '.' .. CensusPlus_Version_Maint;
