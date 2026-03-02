@@ -247,7 +247,7 @@ CENSUSPLUS_CURRENT_BATTLEFIELD_QUEUES   = {};
 
 local g_AccumulatedPruneData            = {};
 
-local g_SupportedRaceCount              = 14;
+local g_SupportedRaceCount              = 15;
 local g_SupportedClassCount             = 13;
 local g_RaceClassList                   = {}; -- Used to pick the right icon
 g_RaceClassList[NLZN.CLASS.DRUID]       = 10;
@@ -509,6 +509,7 @@ function CensusPlus_GetFactionRaces(faction)
       NLZN.RACE.VULPERA,
       NLZN.RACE.DRACTHYR,
       NLZN.RACE.EARTHEN,
+      NLZN.RACE.HARANIR,
     };
   elseif (faction == CENSUSPlus_ALLIANCE) then
     ret = {
@@ -526,6 +527,7 @@ function CensusPlus_GetFactionRaces(faction)
       NLZN.RACE.MECHAGNOME,
       NLZN.RACE.DRACTHYR,
       NLZN.RACE.EARTHEN,
+      NLZN.RACE.HARANIR,
     };
   end
   return ret;
@@ -886,6 +888,18 @@ local function GetRaceClasses(race)
       NLZN.CLASS.PRIEST,
       NLZN.CLASS.WARLOCK,
       NLZN.CLASS.PALADIN,
+      NLZN.CLASS.SHAMAN,
+      NLZN.CLASS.MONK,
+    }
+  elseif race == NLZN.RACE.HARANIR then
+    ret = {
+      NLZN.CLASS.WARRIOR,
+      NLZN.CLASS.HUNTER,
+      NLZN.CLASS.MAGE,
+      NLZN.CLASS.ROGUE,
+      NLZN.CLASS.PRIEST,
+      NLZN.CLASS.WARLOCK,
+      NLZN.CLASS.DRUID,
       NLZN.CLASS.SHAMAN,
       NLZN.CLASS.MONK,
     }
@@ -3813,6 +3827,8 @@ local function getIconTexture(raceClass)
       normalTextureName = 'interface/icons/ui_dracthyr.blp'
     elseif raceClass == NLZN.CLASS.EVOKER then
       normalTextureName = 'interface/icons/classicon_evoker.blp'
+    elseif raceClass == NLZN.RACE.HARANIR then
+      normalTextureName = 'interface/icons/inv12_haranir_character_creation_female.blp'
     end
   end
   return normalTextureName

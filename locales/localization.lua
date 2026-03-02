@@ -128,6 +128,7 @@ CENSUSPLUS_VULPERA              = 'Vulpera';
 
 CENSUSPLUS_DRACTHYR             = 'Dracthyr'
 CENSUSPLUS_EARTHEN              = 'Earthen'
+CENSUSPLUS_HARANIR              = 'Haranir'
 
 -- Blizzard provided translations THESE MUST BE AFTER THE ENGLISH DEFINITIONS
 --.. right or wrong it must match what Blizzard provides
