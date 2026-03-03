@@ -1080,31 +1080,27 @@ local function createLevelFrames(levelCount)
                                  'CensusPlusPanelTemplate')
   levelFrame:SetPoint('TOPLEFT', 147, -316)
   levelFrame:SetSize(
-    levelCount * 6 + (levelCount - 1) * 4 + CENSUSPLUS_FRAMEPADDING_X * 2,
+    (levelCount - MIN_CHARACTER_LEVEL + 1) * 6 +
+    (levelCount - MIN_CHARACTER_LEVEL) * 4 + CENSUSPLUS_FRAMEPADDING_X * 2,
     CENSUSPLUS_FRAMEPADDING_Y * 2 + 130)
   local title = levelFrame:CreateFontString('CensusPlusLevelsTitle', 'ARTWORK',
                                             'GameFontHighlight')
   title:SetPoint('CENTER', levelFrame, 'TOP', 0, 12)
   title:SetText(CENSUSPLUS_LEVEL)
-  for i = 1, levelCount do
+  for i = MIN_CHARACTER_LEVEL, levelCount do
     local levelBar = CreateFrame('Button', 'CensusPlusLevelBar' .. i, levelFrame,
                                  'CensusPlusLevelBarTemplate', i)
     local levelBarEmpty = CreateFrame('Button', 'CensusPlusLevelBarEmpty' .. i,
                                       levelFrame,
                                       'CensusPlusLevelBarEmptyTemplate', i)
-    if i < 20 then
-      levelBar:SetSize(0, 0)
-      levelBar:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT', 0, 0)
-      levelBarEmpty:SetSize(0, 0)
-      levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT', 0, 0)
-    else
-      levelBar:SetPoint('BOTTOMLEFT', levelFrame, 'BOTTOMLEFT',
-                        CENSUSPLUS_FRAMEPADDING_X + (i - 1) * (6 + 4),
-                        CENSUSPLUS_FRAMEPADDING_Y)
-      levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT',
-                             CENSUSPLUS_FRAMEPADDING_X + (i - 1) * (6 + 4),
-                             CENSUSPLUS_FRAMEPADDING_Y)
-    end
+    levelBar:SetPoint('BOTTOMLEFT', levelFrame, 'BOTTOMLEFT',
+                      CENSUSPLUS_FRAMEPADDING_X +
+                      (i - MIN_CHARACTER_LEVEL) * (6 + 4),
+                      CENSUSPLUS_FRAMEPADDING_Y)
+    levelBarEmpty:SetPoint('BOTTOMLEFT', levelFrame, 'TOPLEFT',
+                           CENSUSPLUS_FRAMEPADDING_X +
+                           (i - MIN_CHARACTER_LEVEL) * (6 + 4),
+                           CENSUSPLUS_FRAMEPADDING_Y)
   end
 end
 
@@ -3828,7 +3824,8 @@ local function getIconTexture(raceClass)
     elseif raceClass == NLZN.CLASS.EVOKER then
       normalTextureName = 'interface/icons/classicon_evoker.blp'
     elseif raceClass == NLZN.RACE.HARANIR then
-      normalTextureName = 'interface/icons/inv12_haranir_character_creation_female.blp'
+      normalTextureName =
+      'interface/icons/inv12_haranir_character_creation_female.blp'
     end
   end
   return normalTextureName
