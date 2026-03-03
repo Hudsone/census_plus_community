@@ -62,7 +62,7 @@ CPp.TZWarningSent = false;                    -- not used?
 --
 ]]
 
-local projectVersion = '8.1.14'
+local projectVersion = '8.1.15'
 local versionNumbers = strsplittable('.', projectVersion)
 local CensusPlus_Version_Major = versionNumbers[1]
 local CensusPlus_Version_Minor = versionNumbers[2]
